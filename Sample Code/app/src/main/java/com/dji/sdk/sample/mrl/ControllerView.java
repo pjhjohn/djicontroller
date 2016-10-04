@@ -36,9 +36,6 @@ import dji.common.flightcontroller.DJIVirtualStickYawControlMode;
 import dji.common.util.DJICommonCallbacks.DJICompletionCallback;
 import dji.sdk.flightcontroller.DJISimulator;
 
-/**
- * Class for virtual stick.
- */
 public class ControllerView extends RelativeLayout implements View.OnClickListener {
 
     private boolean mYawControlModeFlag = true;
@@ -77,7 +74,6 @@ public class ControllerView extends RelativeLayout implements View.OnClickListen
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-
         if (null != mSendVirtualStickDataTimer) {
             mSendVirtualStickDataTask.cancel();
             mSendVirtualStickDataTask = null;
@@ -91,8 +87,7 @@ public class ControllerView extends RelativeLayout implements View.OnClickListen
         LayoutInflater layoutInflater = (LayoutInflater) getContext().getSystemService(Service.LAYOUT_INFLATER_SERVICE);
 
         View content = layoutInflater.inflate(R.layout.view_virtual_stick, null, false);
-        addView(content, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
+        addView(content, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
         mBtnEnableVirtualStick = (Button) findViewById(R.id.btn_enable_virtual_stick);
         mBtnDisableVirtualStick = (Button) findViewById(R.id.btn_disable_virtual_stick);
@@ -117,259 +112,176 @@ public class ControllerView extends RelativeLayout implements View.OnClickListen
         mBtnSetRollPitchControlMode.setOnClickListener(this);
         mBtnTakeOff.setOnClickListener(this);
 
-        mBtnSimulator.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-
-                    mTextView.setVisibility(VISIBLE);
-
-                    DJISampleApplication.getAircraftInstance().getFlightController().getSimulator()
-                            .startSimulator(new DJISimulatorInitializationData(
-                                    23, 113, 10, 10
-                            )
-                                    ,new DJICompletionCallback() {
-                                        @Override
-                                        public void onResult(DJIError djiError) {
-
-                                        }
-                                    });
-                } else {
-
-                    mTextView.setVisibility(INVISIBLE);
-
-                    DJISampleApplication.getAircraftInstance().getFlightController().getSimulator()
-                            .stopSimulator(
-                                    new DJICompletionCallback() {
-                                        @Override
-                                        public void onResult(DJIError djiError) {
-
-                                        }
-                                    }
-                            );
-                }
+        mBtnSimulator.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                mTextView.setVisibility(VISIBLE);
+                DJISampleApplication.getAircraftInstance().getFlightController().getSimulator().startSimulator(
+                    new DJISimulatorInitializationData(23, 113, 10, 10),
+                    djiError -> {}
+                );
+            } else {
+                mTextView.setVisibility(INVISIBLE);
+                DJISampleApplication.getAircraftInstance().getFlightController().getSimulator().stopSimulator(
+                    djiError -> {}
+                );
             }
         });
 
-        DJISampleApplication.getAircraftInstance().getFlightController().getSimulator()
-                .setUpdatedSimulatorStateDataCallback(new DJISimulator.UpdatedSimulatorStateDataCallback() {
-                    @Override
-                    public void onSimulatorDataUpdated(final DJISimulatorStateData djiSimulatorStateData) {
-                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+        DJISampleApplication.getAircraftInstance().getFlightController().getSimulator().setUpdatedSimulatorStateDataCallback(
+            djiSimulatorStateData -> new Handler(Looper.getMainLooper()).post(() -> mTextView.setText(
+                "Yaw : " + djiSimulatorStateData.getYaw() + "\n" +
+                "X : " + djiSimulatorStateData.getPositionX() + "\n" +
+                "Y : " + djiSimulatorStateData.getPositionY() + "\n" +
+                "Z : " + djiSimulatorStateData.getPositionZ()
+            ))
+        );
 
-                            @Override
-                            public void run() {
-                                mTextView.setText("Yaw : " + djiSimulatorStateData.getYaw() + "," + "X : " + djiSimulatorStateData.getPositionX() + "\n" +
-                                        "Y : " + djiSimulatorStateData.getPositionY() + "," +
-                                        "Z : " + djiSimulatorStateData.getPositionZ());
-                            }
-                        });
-                    }
-                });
+        mScreenJoystickLeft.setJoystickListener((joystick, pX, pY) -> {
+            if(Math.abs(pX) < 0.02 ) {
+                pX = 0;
+            }
 
-        mScreenJoystickLeft.setJoystickListener(new OnScreenJoystickListener(){
+            if(Math.abs(pY) < 0.02 ) {
+                pY = 0;
+            }
+            float pitchJoyControlMaxSpeed = DJIFlightControllerDataType.DJIVirtualStickRollPitchControlMaxVelocity;
+            float rollJoyControlMaxSpeed = DJIFlightControllerDataType.DJIVirtualStickRollPitchControlMaxVelocity;
 
-            @Override
-            public void onTouch(OnScreenJoystick joystick, float pX, float pY) {
-                if(Math.abs(pX) < 0.02 ){
-                    pX = 0;
-                }
+            mPitch = pitchJoyControlMaxSpeed * pY;
+            mRoll = rollJoyControlMaxSpeed * pX;
 
-                if(Math.abs(pY) < 0.02 ){
-                    pY = 0;
-                }
-                float pitchJoyControlMaxSpeed = DJIFlightControllerDataType.DJIVirtualStickRollPitchControlMaxVelocity;
-                float rollJoyControlMaxSpeed = DJIFlightControllerDataType.DJIVirtualStickRollPitchControlMaxVelocity;
-
-                mPitch = (float)(pitchJoyControlMaxSpeed * pY);
-
-                mRoll = (float)(rollJoyControlMaxSpeed * pX);
-
-                if (null == mSendVirtualStickDataTimer) {
-                    mSendVirtualStickDataTask = new SendVirtualStickDataTask();
-                    mSendVirtualStickDataTimer = new Timer();
-                    mSendVirtualStickDataTimer.schedule(mSendVirtualStickDataTask, 100, 200);
-                }
-
+            if (null == mSendVirtualStickDataTimer) {
+                mSendVirtualStickDataTask = new SendVirtualStickDataTask();
+                mSendVirtualStickDataTimer = new Timer();
+                mSendVirtualStickDataTimer.schedule(mSendVirtualStickDataTask, 100, 200);
             }
 
         });
 
-        mScreenJoystickRight.setJoystickListener(new OnScreenJoystickListener() {
-
-            @Override
-            public void onTouch(OnScreenJoystick joystick, float pX, float pY) {
-                if(Math.abs(pX) < 0.02 ){
-                    pX = 0;
-                }
-
-                if(Math.abs(pY) < 0.02 ){
-                    pY = 0;
-                }
-                float verticalJoyControlMaxSpeed = DJIFlightControllerDataType.DJIVirtualStickVerticalControlMaxVelocity;
-                float yawJoyControlMaxSpeed = DJIFlightControllerDataType.DJIVirtualStickYawControlMaxAngularVelocity;
-
-                mYaw = (float)(yawJoyControlMaxSpeed * pX);
-                mThrottle = (float)(verticalJoyControlMaxSpeed * pY);
-
-                if (null == mSendVirtualStickDataTimer) {
-                    mSendVirtualStickDataTask = new SendVirtualStickDataTask();
-                    mSendVirtualStickDataTimer = new Timer();
-                    mSendVirtualStickDataTimer.schedule(mSendVirtualStickDataTask, 0, 200);
-                }
-
+        mScreenJoystickRight.setJoystickListener((joystick, pX, pY) -> {
+            if(Math.abs(pX) < 0.02 ) {
+                pX = 0;
             }
+
+            if(Math.abs(pY) < 0.02 ) {
+                pY = 0;
+            }
+            float verticalJoyControlMaxSpeed = DJIFlightControllerDataType.DJIVirtualStickVerticalControlMaxVelocity;
+            float yawJoyControlMaxSpeed = DJIFlightControllerDataType.DJIVirtualStickYawControlMaxAngularVelocity;
+
+            mYaw = yawJoyControlMaxSpeed * pX;
+            mThrottle = verticalJoyControlMaxSpeed * pY;
+
+            if (null == mSendVirtualStickDataTimer) {
+                mSendVirtualStickDataTask = new SendVirtualStickDataTask();
+                mSendVirtualStickDataTimer = new Timer();
+                mSendVirtualStickDataTimer.schedule(mSendVirtualStickDataTask, 0, 200);
+            }
+
         });
     }
 
     @Override
     public void onClick(View v) {
-        if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) {
-            return;
-        }
+        if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
         switch (v.getId()) {
             case R.id.btn_enable_virtual_stick:
-                DJISampleApplication.getAircraftInstance().
-                        getFlightController().enableVirtualStickControlMode(
-                        new DJICompletionCallback() {
-                            @Override
-                            public void onResult(DJIError djiError) {
-                                Utils.showDialogBasedOnError(getContext(), djiError);
-                            }
-                        }
+                DJISampleApplication.getAircraftInstance().getFlightController().enableVirtualStickControlMode(
+                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
                 );
                 break;
 
             case R.id.btn_disable_virtual_stick:
-                DJISampleApplication.getAircraftInstance().
-                        getFlightController().disableVirtualStickControlMode(
-                        new DJICompletionCallback() {
-                            @Override
-                            public void onResult(DJIError djiError) {
-                                Utils.showDialogBasedOnError(getContext(), djiError);
-                            }
-                        }
+                DJISampleApplication.getAircraftInstance().getFlightController().disableVirtualStickControlMode(
+                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
                 );
                 break;
 
             case R.id.btn_roll_pitch_control_mode:
                 if (mRollPitchControlModeFlag) {
-                    DJISampleApplication.getAircraftInstance().getFlightController().
-                        setRollPitchControlMode(
-                            DJIVirtualStickRollPitchControlMode.Angle);
+                    DJISampleApplication.getAircraftInstance().getFlightController().setRollPitchControlMode(
+                        DJIVirtualStickRollPitchControlMode.Angle
+                    );
                     mRollPitchControlModeFlag = false;
                 } else {
-                    DJISampleApplication.getAircraftInstance().getFlightController().
-                        setRollPitchControlMode(
-                            DJIVirtualStickRollPitchControlMode.Velocity
-                        );
+                    DJISampleApplication.getAircraftInstance().getFlightController().setRollPitchControlMode(
+                        DJIVirtualStickRollPitchControlMode.Velocity
+                    );
                     mRollPitchControlModeFlag = true;
                 }
                 try {
-                    Utils.setResultToToast(getContext(), DJISampleApplication.
-                            getAircraftInstance().getFlightController().
-                            getRollPitchControlMode().name());
-                } catch(Exception ex) {};
+                    Utils.setResultToToast(getContext(), DJISampleApplication.getAircraftInstance().getFlightController().getRollPitchControlMode().name());
+                } catch(Exception ex) {}
                 break;
 
             case R.id.btn_yaw_control_mode:
                 if (mYawControlModeFlag) {
-                    DJISampleApplication.getAircraftInstance().getFlightController().
-                            setYawControlMode(
-                                    DJIVirtualStickYawControlMode.Angle
-                            );
+                    DJISampleApplication.getAircraftInstance().getFlightController().setYawControlMode(
+                        DJIVirtualStickYawControlMode.Angle
+                    );
                     mYawControlModeFlag = false;
                 } else {
-                    DJISampleApplication.getAircraftInstance().getFlightController().
-                        setYawControlMode(
-                            DJIVirtualStickYawControlMode.AngularVelocity
-                        );
+                    DJISampleApplication.getAircraftInstance().getFlightController().setYawControlMode(
+                        DJIVirtualStickYawControlMode.AngularVelocity
+                    );
                     mYawControlModeFlag = true;
                 }
                 try {
-                    Utils.setResultToToast(getContext(), DJISampleApplication.
-                            getAircraftInstance().getFlightController().
-                            getYawControlMode().name());
-                } catch(Exception ex) {};
+                    Utils.setResultToToast(getContext(), DJISampleApplication.getAircraftInstance().getFlightController().getYawControlMode().name());
+                } catch(Exception ex) {}
                 break;
 
             case R.id.btn_vertical_control_mode:
                 if (mVerticalControlModeFlag) {
-                    DJISampleApplication.getAircraftInstance().getFlightController().
-                        setVerticalControlMode(
-                            DJIVirtualStickVerticalControlMode.Position
-                        );
+                    DJISampleApplication.getAircraftInstance().getFlightController().setVerticalControlMode(
+                        DJIVirtualStickVerticalControlMode.Position
+                    );
                     mVerticalControlModeFlag = false;
                 } else {
-                    DJISampleApplication.getAircraftInstance().getFlightController().
-                        setVerticalControlMode(
-                            DJIVirtualStickVerticalControlMode.Velocity
-                        );
+                    DJISampleApplication.getAircraftInstance().getFlightController().setVerticalControlMode(
+                        DJIVirtualStickVerticalControlMode.Velocity
+                    );
                     mVerticalControlModeFlag = true;
                 }
                 try {
-                    Utils.setResultToToast(getContext(), DJISampleApplication.
-                            getAircraftInstance().getFlightController().
-                            getVerticalControlMode().name());
-                } catch(Exception ex) {};
+                    Utils.setResultToToast(getContext(), DJISampleApplication.getAircraftInstance().getFlightController().getVerticalControlMode().name());
+                } catch(Exception ex) {}
                 break;
 
             case R.id.btn_horizontal_coordinate:
                 if (mHorizontalCoordinateFlag) {
-                    DJISampleApplication.getAircraftInstance().getFlightController().
-                        setHorizontalCoordinateSystem(
-                            DJIVirtualStickFlightCoordinateSystem.Ground
-                        );
+                    DJISampleApplication.getAircraftInstance().getFlightController().setHorizontalCoordinateSystem(
+                        DJIVirtualStickFlightCoordinateSystem.Ground
+                    );
                     mHorizontalCoordinateFlag = false;
                 } else {
-                    DJISampleApplication.getAircraftInstance().getFlightController().
-                        setHorizontalCoordinateSystem(
-                            DJIVirtualStickFlightCoordinateSystem.Body
-                        );
+                    DJISampleApplication.getAircraftInstance().getFlightController().setHorizontalCoordinateSystem(
+                        DJIVirtualStickFlightCoordinateSystem.Body
+                    );
                     mHorizontalCoordinateFlag = true;
                 }
                 try {
-                    Utils.setResultToToast(getContext(), DJISampleApplication.
-                            getAircraftInstance().getFlightController().
-                            getRollPitchCoordinateSystem().name());
-                } catch(Exception ex) {};
+                    Utils.setResultToToast(getContext(), DJISampleApplication.getAircraftInstance().getFlightController().getRollPitchCoordinateSystem().name());
+                } catch(Exception ex) {}
                 break;
 
             case R.id.btn_take_off:
-
                 DJISampleApplication.getAircraftInstance().getFlightController().takeOff(
-                        new DJICompletionCallback() {
-                            @Override
-                            public void onResult(DJIError djiError) {
-                                Utils.showDialogBasedOnError(getContext(), djiError);
-                            }
-                        }
+                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
                 );
-
                 break;
-
-            default:
-                break;
+            default: break;
         }
     }
 
     class SendVirtualStickDataTask extends TimerTask {
-
         @Override
         public void run() {
-            if (DJIModuleVerificationUtil.isFlightControllerAvailable()) {
-                DJISampleApplication.getAircraftInstance().
-                        getFlightController().sendVirtualStickFlightControlData(
-                        new DJIVirtualStickFlightControlData(
-                                mPitch, mRoll, mYaw, mThrottle
-                        ), new DJICompletionCallback() {
-                            @Override
-                            public void onResult(DJIError djiError) {
-
-                            }
-                        }
-                );
-            }
+            if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
+            DJISampleApplication.getAircraftInstance().getFlightController().sendVirtualStickFlightControlData(
+                new DJIVirtualStickFlightControlData(mPitch, mRoll, mYaw, mThrottle),
+                djiError -> {}
+            );
         }
     }
 }
