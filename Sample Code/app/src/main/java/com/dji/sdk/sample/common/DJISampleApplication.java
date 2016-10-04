@@ -19,6 +19,7 @@ import dji.sdk.products.DJIAircraft;
 import dji.sdk.products.DJIHandHeld;
 import dji.sdk.sdkmanager.DJIBluetoothProductConnector;
 import dji.sdk.sdkmanager.DJISDKManager;
+import timber.log.Timber;
 
 /**
  * Created by dji on 15/12/28.
@@ -79,6 +80,11 @@ public class DJISampleApplication extends Application {
         super.onCreate();
 
         mHandler = new Handler(Looper.getMainLooper());
+
+        /**
+         * Timber Initialization
+         */
+        Timber.plant(new Timber.DebugTree());
 
         /**
          * handles SDK Registration using the API_KEY

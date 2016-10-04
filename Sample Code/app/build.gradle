@@ -31,4 +31,6 @@ dependencies {
     compile 'com.android.support:multidex:1.0.1'
     compile project(':dJISDKLIB')
 
+    /* Timber */
+    compile 'com.jakewharton.timber:timber:4.3.1'
 }
