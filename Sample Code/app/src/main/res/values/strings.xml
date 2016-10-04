@@ -15,6 +15,8 @@
     <string name="success">Success</string>
 
     <!-- Component list -->
+    <string name="component_listview_mrl">MRL</string>
+    <string name="component_listview_controller">Controller</string>
     <string name="component_listview_component">Component</string>
     <string name="component_listview_camera">Camera</string>
     <string name="component_listview_gimbal">Gimbal</string>
@@ -145,6 +147,7 @@
     <string name="reboot_wifi_airlink_hint">If you reoot the WiFi, the connection between product and mobile phone device might lose.</string>
 
     <!-- Component string -->
+    <string name="component_mrl">mrl</string>
     <string name="component_camera">camera</string>
     <string name="component_gimbal">gimbal</string>
     <string name="component_airlink">airlink</string>
@@ -152,6 +155,9 @@
     <string name="component_flight_controller">flightcontroller</string>
     <string name="component_remotoe_controller">remotecontroller</string>
     <string name="component_mission_manager">missionmanager</string>
+
+    <!-- View MRL class name -->
+    <string name="view_controller">ControllerView</string>
 
     <!-- View camera class name -->
     <string name="view_set_get_iso">SetGetISOView</string>

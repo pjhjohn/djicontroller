@@ -17,6 +17,22 @@
             android:orientation="vertical">
 
             <TextView
+                style="@style/listview_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/component_listview_mrl"/>
+
+            <com.dji.sdk.sample.common.ListViewItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                set:list_item_name="@string/component_listview_controller"
+                set:sub_Layout="@layout/content_main"
+                set:component_name="@string/component_mrl"
+                set:view_name="@string/view_controller">
+
+            </com.dji.sdk.sample.common.ListViewItem>
+
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 style="@style/listview_subtitle"
