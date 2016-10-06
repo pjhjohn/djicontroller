@@ -1,24 +1,28 @@
-# DJI Mobile SDK for Android
+# Phantom4Simulator
 
-## What Is This?
+Research-purpose Android Application to control [DJI Phantom4](http://www.dji.com/phantom-4) using [DJI Mobile SDK](https://developer.dji.com/mobile-sdk/)
 
-The DJI Mobile SDK enables you to automate your DJI Product. You can control flight, and many subsystems of the product including the camera and gimbal. Using the Mobile SDK, create a customized mobile app to unlock the full potential of your DJI aerial platform.
+## Getting Started
 
-## Different CPU Architectures Support
+**NOTE : Can be frequently edited over workaround**
 
-For developers who want to support mobile devices with different CPU architectures accurately, please refer to the **SO Support Libraries** folder.
+### Prerequisites
 
-## Package Name Replace Script
+- AndroidStudio 2.2
+- Android SDK
+- [DJI Mobile SDK for Andorid](https://github.com/snumrl/DJIAndroidMobileSDK)
 
-Since Android SDK 3.3 has changed or deprecated some package names or class names, we provide an executable JAR file, which contains scripts for you to replace old package names (SDK Version 3.2.1) to new package name (SDK Version 3.3) automatically. Please refer to [this link](./Executable JAR/README.md) for more details.
+### Download
 
-## Running the SDK Sample Code
+```sh
+git clone --recursive https://github.com/snumrl/DJIControllerSample
+```
 
-Developers can [run the sample application](https://developer.dji.com/mobile-sdk/documentation/quick-start/index.html) to immediately run code and see how the DJI Mobile SDK can be used.
+Open `./DJIControllerSample/Sample Code` using AndroidStudio
 
-One of DJI's aircraft or handheld cameras will be required to run the sample application.
+## Base README of [Mobile-SDK-Android](https://github.com/dji-sdk/Mobile-SDK-Android)
 
-## Development Workflow 
+### Development Workflow 
 
 From registering as a developer, to deploying an application, the following will take you through the full Mobile SDK Application development process:
 
@@ -29,7 +33,7 @@ From registering as a developer, to deploying an application, the following will
 - [Testing, Profiling & Debugging](https://developer.dji.com/mobile-sdk/documentation/application-development-workflow/workflow-testing.html)
 - [Deploy](https://developer.dji.com/mobile-sdk/documentation/application-development-workflow/workflow-deploy.html)
 
-## Sample Projects & Tutorials
+### Sample Projects & Tutorials
 
 Several Android tutorials are provided as examples on how to use different features of the Mobile SDK and debug tools includes:
 
@@ -39,15 +43,15 @@ Several Android tutorials are provided as examples on how to use different featu
 - [MapView and Waypoint Application (GoogleMap)](https://developer.dji.com/mobile-sdk/documentation/android-tutorials/GSDemo-Google-Map.html)
 - [TapFly and ActiveTrack Application](https://developer.dji.com/mobile-sdk/documentation/android-tutorials/P4MissionsDemo.html)
 
-## Learn More about DJI Products and the Mobile SDK
+### Learn More about DJI Products and the Mobile SDK
 
 Please visit [DJI Mobile SDK Documentation](https://developer.dji.com/mobile-sdk/documentation/introduction/index.html) for more details.
 
-## SDK API Reference
+### SDK API Reference
 
 [**Android SDK API Documentation**](https://developer.dji.com/iframe/mobile-sdk-doc/android/reference/packages.html)
 
-## Support
+### Support
 
 You can get support from DJI with the following methods:
 
