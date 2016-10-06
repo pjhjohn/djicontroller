@@ -1,6 +1,5 @@
 package com.dji.sdk.sample.mrl;
 
-import android.app.Service;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
@@ -9,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -19,22 +17,20 @@ import com.dji.sdk.sample.common.DJISampleApplication;
 import com.dji.sdk.sample.common.Utils;
 import com.dji.sdk.sample.utils.DJIModuleVerificationUtil;
 import com.dji.sdk.sample.utils.OnScreenJoystick;
-import com.dji.sdk.sample.utils.OnScreenJoystickListener;
 
 import java.util.Timer;
 import java.util.TimerTask;
 
-import dji.common.error.DJIError;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
 import dji.common.flightcontroller.DJIFlightControllerDataType;
 import dji.common.flightcontroller.DJISimulatorInitializationData;
-import dji.common.flightcontroller.DJISimulatorStateData;
 import dji.common.flightcontroller.DJIVirtualStickFlightControlData;
 import dji.common.flightcontroller.DJIVirtualStickFlightCoordinateSystem;
 import dji.common.flightcontroller.DJIVirtualStickRollPitchControlMode;
 import dji.common.flightcontroller.DJIVirtualStickVerticalControlMode;
 import dji.common.flightcontroller.DJIVirtualStickYawControlMode;
-import dji.common.util.DJICommonCallbacks.DJICompletionCallback;
-import dji.sdk.flightcontroller.DJISimulator;
 
 public class ControllerView extends RelativeLayout implements View.OnClickListener {
 
@@ -44,22 +40,23 @@ public class ControllerView extends RelativeLayout implements View.OnClickListen
     private boolean mHorizontalCoordinateFlag = true;
     private boolean mStartSimulatorFlag = false;
 
-    private Button mBtnEnableVirtualStick;
-    private Button mBtnDisableVirtualStick;
-    private Button mBtnHorizontalCoordinate;
-    private Button mBtnSetYawControlMode;
-    private Button mBtnSetVerticalControlMode;
-    private Button mBtnSetRollPitchControlMode;
-    private ToggleButton mBtnSimulator;
-    private Button mBtnTakeOff;
+    @BindView(R.id.btn_enable_virtual_stick) protected Button mBtnEnableVirtualStick;
+    @BindView(R.id.btn_disable_virtual_stick) protected Button mBtnDisableVirtualStick;
+    @BindView(R.id.btn_horizontal_coordinate) protected Button mBtnHorizontalCoordinate;
+    @BindView(R.id.btn_yaw_control_mode) protected Button mBtnSetYawControlMode;
+    @BindView(R.id.btn_vertical_control_mode) protected Button mBtnSetVerticalControlMode;
+    @BindView(R.id.btn_roll_pitch_control_mode) protected Button mBtnSetRollPitchControlMode;
+    @BindView(R.id.btn_start_simulator) protected ToggleButton mBtnSimulator;
+    @BindView(R.id.btn_take_off) protected Button mBtnTakeOff;
 
-    private TextView mTextView;
+    @BindView(R.id.textview_simulator) protected TextView mTextView;
 
-    private OnScreenJoystick mScreenJoystickRight;
-    private OnScreenJoystick mScreenJoystickLeft;
+    @BindView(R.id.directionJoystickRight) protected OnScreenJoystick mScreenJoystickRight;
+    @BindView(R.id.directionJoystickLeft) protected OnScreenJoystick mScreenJoystickLeft;
 
     private Timer mSendVirtualStickDataTimer;
     private SendVirtualStickDataTask mSendVirtualStickDataTask;
+    private Unbinder mUnbinder;
 
     private float mPitch;
     private float mRoll;
@@ -74,6 +71,7 @@ public class ControllerView extends RelativeLayout implements View.OnClickListen
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        mUnbinder.unbind();
         if (null != mSendVirtualStickDataTimer) {
             mSendVirtualStickDataTask.cancel();
             mSendVirtualStickDataTask = null;
@@ -84,25 +82,9 @@ public class ControllerView extends RelativeLayout implements View.OnClickListen
     }
 
     private void initUI(Context context, AttributeSet attrs) {
-        LayoutInflater layoutInflater = (LayoutInflater) getContext().getSystemService(Service.LAYOUT_INFLATER_SERVICE);
-
-        View content = layoutInflater.inflate(R.layout.view_virtual_stick, null, false);
+        View content = LayoutInflater.from(context).inflate(R.layout.view_virtual_stick, null, false);
         addView(content, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
-        mBtnEnableVirtualStick = (Button) findViewById(R.id.btn_enable_virtual_stick);
-        mBtnDisableVirtualStick = (Button) findViewById(R.id.btn_disable_virtual_stick);
-        mBtnHorizontalCoordinate = (Button) findViewById(R.id.btn_horizontal_coordinate);
-        mBtnSetYawControlMode = (Button) findViewById(R.id.btn_yaw_control_mode);
-        mBtnSetVerticalControlMode = (Button) findViewById(R.id.btn_vertical_control_mode);
-        mBtnSetRollPitchControlMode = (Button) findViewById(R.id.btn_roll_pitch_control_mode);
-        mBtnTakeOff = (Button) findViewById(R.id.btn_take_off);
-
-        mBtnSimulator = (ToggleButton) findViewById(R.id.btn_start_simulator);
-
-        mTextView = (TextView) findViewById(R.id.textview_simulator);
-
-        mScreenJoystickRight = (OnScreenJoystick)findViewById(R.id.directionJoystickRight);
-        mScreenJoystickLeft = (OnScreenJoystick)findViewById(R.id.directionJoystickLeft);
+        mUnbinder = ButterKnife.bind(content);
 
         mBtnEnableVirtualStick.setOnClickListener(this);
         mBtnDisableVirtualStick.setOnClickListener(this);
@@ -137,13 +119,9 @@ public class ControllerView extends RelativeLayout implements View.OnClickListen
         );
 
         mScreenJoystickLeft.setJoystickListener((joystick, pX, pY) -> {
-            if(Math.abs(pX) < 0.02 ) {
-                pX = 0;
-            }
+            if(Math.abs(pX) < 0.02 ) pX = 0;
+            if(Math.abs(pY) < 0.02 ) pY = 0;
 
-            if(Math.abs(pY) < 0.02 ) {
-                pY = 0;
-            }
             float pitchJoyControlMaxSpeed = DJIFlightControllerDataType.DJIVirtualStickRollPitchControlMaxVelocity;
             float rollJoyControlMaxSpeed = DJIFlightControllerDataType.DJIVirtualStickRollPitchControlMaxVelocity;
 
@@ -159,13 +137,9 @@ public class ControllerView extends RelativeLayout implements View.OnClickListen
         });
 
         mScreenJoystickRight.setJoystickListener((joystick, pX, pY) -> {
-            if(Math.abs(pX) < 0.02 ) {
-                pX = 0;
-            }
+            if(Math.abs(pX) < 0.02 ) pX = 0;
+            if(Math.abs(pY) < 0.02 ) pY = 0;
 
-            if(Math.abs(pY) < 0.02 ) {
-                pY = 0;
-            }
             float verticalJoyControlMaxSpeed = DJIFlightControllerDataType.DJIVirtualStickVerticalControlMaxVelocity;
             float yawJoyControlMaxSpeed = DJIFlightControllerDataType.DJIVirtualStickYawControlMaxAngularVelocity;
 
