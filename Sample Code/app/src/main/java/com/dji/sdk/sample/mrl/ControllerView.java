@@ -84,7 +84,7 @@ public class ControllerView extends RelativeLayout implements View.OnClickListen
     private void initUI(Context context, AttributeSet attrs) {
         View content = LayoutInflater.from(context).inflate(R.layout.view_virtual_stick, null, false);
         addView(content, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        mUnbinder = ButterKnife.bind(content);
+        mUnbinder = ButterKnife.bind(this, content);
 
         mBtnEnableVirtualStick.setOnClickListener(this);
         mBtnDisableVirtualStick.setOnClickListener(this);
