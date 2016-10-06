@@ -1,4 +1,4 @@
-# Phantom4Simulator
+# DJIControllerSample
 
 Research-purpose Android Application to control [DJI Phantom4](http://www.dji.com/phantom-4) using [DJI Mobile SDK](https://developer.dji.com/mobile-sdk/)
 
