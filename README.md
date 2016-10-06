@@ -20,7 +20,21 @@ git clone --recursive https://github.com/snumrl/DJIControllerSample
 
 Open `./DJIControllerSample/Sample Code` using AndroidStudio
 
-## Base README of [Mobile-SDK-Android](https://github.com/dji-sdk/Mobile-SDK-Android)
+## Remote Debugging using wi-fi
+
+We need remote debugger to get logs from the device through logcat.
+Both the device and PC should be under same wi-fi router : like `mrl`
+
+1. Connect the device to the PC using USB and establish an ADB connection
+2. `adb tcpip 5555` # 5555 is the port number
+3. Disconnect your USB cable
+4. `adb connect MOBILE_IP:port` => `adb connect 192.IP_REMAINING:5555`
+5. Tern on AndroidStudio and check the logcat
+* You can get the ip address by **dialing to `*#*#4636#*#*` > Wifi Information > Wifi Status (> Refresh)**
+
+**References** : [Checking Device IP](http://android.stackexchange.com/questions/2984/how-can-i-see-what-ip-address-my-android-phone-has), [Remote Logging](http://forum.dev.dji.com/thread-32434-1-1.html)
+
+## README from [Mobile-SDK-Android](https://github.com/dji-sdk/Mobile-SDK-Android)
 
 ### Development Workflow 
 
