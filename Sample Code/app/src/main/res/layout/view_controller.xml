@@ -1,114 +1,133 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:orientation="vertical"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="8dp">
 
-    <Button
-        android:id="@+id/btn_disable_virtual_stick"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="150dp"
-        android:text="Disable Virtual Stick"
-        style="@style/common_button"
+    <TextView
+        android:id="@+id/simulator_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:textStyle="bold"
+        android:text="Simulator Logger"
         />
 
     <TextView
-        android:layout_marginTop="70dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:id="@+id/simulator_log"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/simulator_header"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_above="@+id/actions_header"
         android:layout_centerHorizontal="true"
-        android:text="Simulator is off."
-        android:id="@+id/textview_simulator"/>
+        />
 
-    <Button
-        android:id="@+id/btn_enable_virtual_stick"
-        android:layout_below="@+id/tv_mission_info"
-        android:layout_centerHorizontal="true"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="150dp"
-        android:layout_toLeftOf="@id/btn_disable_virtual_stick"
-        android:text="Enable Virtual Stick"
-        style="@style/common_button"/>
-
-    <Button
-        android:id="@+id/btn_horizontal_coordinate"
-        android:layout_below="@+id/tv_mission_info"
-        android:layout_centerHorizontal="true"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="150dp"
-        android:layout_toRightOf="@id/btn_disable_virtual_stick"
-        android:text="ChangeCoordinateSystem"
-        style="@style/common_button"/>
-
-
-    <Button
-        android:id="@+id/btn_vertical_control_mode"
-        android:layout_alignLeft="@id/btn_disable_virtual_stick"
-        android:layout_below="@+id/btn_disable_virtual_stick"
-        android:layout_marginTop="10dp"
-        android:text="Vertical Control Mode"
-        style="@style/common_button"/>
-
-    <Button
-        android:id="@+id/btn_yaw_control_mode"
-        android:layout_below="@id/btn_horizontal_coordinate"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="10dp"
-        android:layout_toLeftOf="@id/btn_vertical_control_mode"
-        android:text="Yaw Control Mode"
-        style="@style/common_button"/>
-
-    <Button
-        android:id="@+id/btn_roll_pitch_control_mode"
-        android:layout_below="@id/btn_horizontal_coordinate"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="10dp"
-        android:layout_toRightOf="@id/btn_vertical_control_mode"
-        android:text="Pitch Roll Control Mode"
-        style="@style/common_button"/>
-
-    <ToggleButton
-        android:id="@+id/btn_start_simulator"
-        android:layout_width="wrap_content"
+    <TextView
+        android:id="@+id/actions_header"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Start Simulator"
-        android:textOff="Start Simulator"
-        android:textOn="Stop Simulator"
-        android:layout_marginTop="10dp"
-        style="@style/common_button"
-        android:layout_below="@+id/btn_yaw_control_mode"
-        android:layout_alignStart="@+id/btn_yaw_control_mode"
-        android:layout_marginRight="10dp" />
+        android:layout_above="@+id/action_toggles_container"
+        android:textStyle="bold"
+        android:text="Availiable Actions"
+        />
 
-    <Button
-        android:id="@+id/btn_take_off"
-
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/action_toggles_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Take Off"
-        style="@style/common_button"
-        android:layout_below="@+id/btn_vertical_control_mode"
-        android:layout_alignLeft="@+id/btn_vertical_control_mode"
-        android:layout_marginTop="10dp" />
+        android:weightSum="3"
+        android:layout_above="@+id/action_buttons_container">
+
+        <ToggleButton
+            style="@style/common_button"
+            android:id="@+id/btn_toggle_simulator"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Start Flight Simulator"
+            android:textOff="Start Flight Simulator"
+            android:textOn="Stop Flight Simulator"
+            />
+
+        <ToggleButton
+            style="@style/common_button"
+            android:id="@+id/btn_toggle_advanced_flight_mode"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Enable Adv. Flight Mode"
+            android:textOff="Enable Adv. Flight Mode"
+            android:textOn="Disable Adv. Flight Mode"
+            />
+
+        <ToggleButton
+            style="@style/common_button"
+            android:id="@+id/btn_toggle_virtual_stick"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Enable V.Stick"
+            android:textOff="Enable Virtual Stick"
+            android:textOn="Disable Virtual Stick"
+            />
+    </LinearLayout>
+
+    <!--Enable & Disable Virtual Stick-->
+    <LinearLayout
+        android:id="@+id/action_buttons_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="3"
+        android:layout_above="@+id/joystic_right"
+        android:layout_marginBottom="8dp">
+        <Button
+            style="@style/common_button"
+            android:id="@+id/btn_take_off"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Take Off"
+            />
+        <Button
+            style="@style/common_button"
+            android:id="@+id/btn_custom_action1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Custom Action 1"
+            />
+
+        <Button
+            style="@style/common_button"
+            android:id="@+id/btn_custom_action2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Custom Action 2"
+            />
+
+    </LinearLayout>
+
+    <!--Joysticks for Virtual Simulator-->
+    <com.dji.sdk.sample.utils.OnScreenJoystick
+        android:id="@+id/joystic_right"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:background="@mipmap/joystick_bg"
+        />
 
     <com.dji.sdk.sample.utils.OnScreenJoystick
-        android:id="@+id/directionJoystickRight"
-        android:layout_width="130dp"
-        android:layout_height="130dp"
-        android:layout_alignParentLeft="true"
+        android:id="@+id/joystic_left"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="10dp"
-        android:layout_marginLeft="10dp"
-        android:background="@mipmap/joystick_bg"/>
-
-    <com.dji.sdk.sample.utils.OnScreenJoystick
-        android:id="@+id/directionJoystickLeft"
-        android:layout_width="130dp"
-        android:layout_height="130dp"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="10dp"
-        android:layout_marginRight="10dp"
-        android:background="@mipmap/joystick_bg"/>
+        android:background="@mipmap/joystick_bg"
+        />
 
 </RelativeLayout>
