@@ -11,27 +11,37 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:textStyle="bold"
-        android:text="Simulator Logger"
+        android:text="@string/simulator_header_text"
         />
 
+    <!--Logger Space-->
     <TextView
-        android:id="@+id/simulator_log"
+        android:id="@+id/logger_text"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/simulator_header"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentEnd="true"
         android:layout_above="@+id/actions_header"
         android:layout_centerHorizontal="true"
+        android:visibility="gone"
+        />
+    <ListView
+        android:id="@+id/logger_textlist"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/simulator_header"
+        android:layout_above="@+id/actions_header"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone"
         />
 
+    <!--Actions-->
     <TextView
         android:id="@+id/actions_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/action_toggles_container"
         android:textStyle="bold"
-        android:text="Availiable Actions"
+        android:text="@string/actions_header_text"
         />
 
     <LinearLayout
@@ -47,9 +57,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Start Flight Simulator"
-            android:textOff="Start Flight Simulator"
-            android:textOn="Stop Flight Simulator"
+            android:text="@string/btn_toggle_simulator_off"
+            android:textOff="@string/btn_toggle_simulator_off"
+            android:textOn="@string/btn_toggle_simulator_on"
             />
 
         <ToggleButton
@@ -58,9 +68,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Enable Adv. Flight Mode"
-            android:textOff="Enable Adv. Flight Mode"
-            android:textOn="Disable Adv. Flight Mode"
+            android:text="@string/btn_toggle_advanced_flight_mode_off"
+            android:textOff="@string/btn_toggle_advanced_flight_mode_off"
+            android:textOn="@string/btn_toggle_advanced_flight_mode_on"
             />
 
         <ToggleButton
@@ -69,9 +79,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Enable V.Stick"
-            android:textOff="Enable Virtual Stick"
-            android:textOn="Disable Virtual Stick"
+            android:text="@string/btn_toggle_virtual_stick_off"
+            android:textOff="@string/btn_toggle_virtual_stick_off"
+            android:textOn="@string/btn_toggle_virtual_stick_on"
             />
     </LinearLayout>
 
@@ -89,7 +99,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Take Off"
+            android:text="@string/btn_take_off_text"
             />
         <Button
             style="@style/common_button"
@@ -97,7 +107,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Custom Action 1"
+            android:text="@string/btn_custom_action1_text"
             />
 
         <Button
@@ -106,7 +116,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Custom Action 2"
+            android:text="@string/btn_custom_action2_text"
             />
 
     </LinearLayout>

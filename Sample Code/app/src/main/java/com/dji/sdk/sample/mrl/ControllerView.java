@@ -7,10 +7,11 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.dji.sdk.sample.R;
@@ -19,6 +20,7 @@ import com.dji.sdk.sample.common.Utils;
 import com.dji.sdk.sample.utils.DJIModuleVerificationUtil;
 import com.dji.sdk.sample.utils.OnScreenJoystick;
 
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -28,10 +30,17 @@ import butterknife.Unbinder;
 import dji.common.flightcontroller.DJIFlightControllerDataType;
 import dji.common.flightcontroller.DJISimulatorInitializationData;
 import dji.common.flightcontroller.DJIVirtualStickFlightControlData;
+import timber.log.Timber;
 
 public class ControllerView extends RelativeLayout {
 
-    @BindView(R.id.simulator_log) protected TextView mTextView;
+    private final double SIMULATOR_INITIAL_LATITUDE = 20;
+    private final double SIMULATOR_INITIAL_LONGITUDE = 20;
+    private final int SIMULATION_UPDATE_FREQUENCY = 10;
+    private final int SIMULATOR_INITIAL_NUM_OF_SATELLITES = 10;
+
+    @BindView(R.id.logger_text) protected TextView mTextLogger;
+    @BindView(R.id.logger_textlist) protected ListView mListLogger;
 
     @BindView(R.id.btn_toggle_simulator) protected ToggleButton mToggleSimulator;
     @BindView(R.id.btn_toggle_advanced_flight_mode) protected ToggleButton mToggleAdvFlightMode;
@@ -46,6 +55,9 @@ public class ControllerView extends RelativeLayout {
 
     private Unbinder mUnbinder;
 
+    private ArrayList<String> mLog;
+    private ArrayAdapter<String> mAdapter;
+
     private Timer mSendVirtualStickDataTimer;
     private SendVirtualStickDataTask mSendVirtualStickDataTask;
 
@@ -53,6 +65,7 @@ public class ControllerView extends RelativeLayout {
     private float mRoll;
     private float mYaw;
     private float mThrottle;
+    private int mCommandIndex;
 
     public ControllerView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -77,25 +90,19 @@ public class ControllerView extends RelativeLayout {
         View content = LayoutInflater.from(context).inflate(R.layout.view_controller, null, false);
         addView(content, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         mUnbinder = ButterKnife.bind(this, content);
-        mTextView.setText("Simulator is off.");
+
+        mCommandIndex = 0;
+
+        /* Initialize Loggers */
+        this.setLoggerMode(LOGGER_LIST);
+
+        mLog = new ArrayList<>();
+        mAdapter = new ArrayAdapter<>(this.getContext(), R.layout.list_logger_item, android.R.id.text1, mLog);
+        mListLogger.setAdapter(mAdapter);
 
         /* Set Action Toggle Button Handlers */
-        mToggleSimulator.setOnCheckedChangeListener((buttonView, checked) -> {
-            if (checked) {
-                mTextView.setVisibility(VISIBLE);
-                DJISampleApplication.getAircraftInstance().getFlightController().getSimulator().startSimulator(
-                    new DJISimulatorInitializationData(23, 113, 10, 10),
-                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
-                );
-            } else {
-                mTextView.setVisibility(INVISIBLE);
-                DJISampleApplication.getAircraftInstance().getFlightController().getSimulator().stopSimulator(
-                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
-                );
-            }
-        });
         DJISampleApplication.getAircraftInstance().getFlightController().getSimulator().setUpdatedSimulatorStateDataCallback(
-            djiSimulatorStateData -> new Handler(Looper.getMainLooper()).post(() -> mTextView.setText(String.format(
+            djiSimulatorStateData -> new Handler(Looper.getMainLooper()).post(() -> mTextLogger.setText(String.format(
                 "Yaw : %f\nPitch : %f\nRoll : %f\nX : %f\nY : %f\nZ : %f",
                 djiSimulatorStateData.getYaw(),
                 djiSimulatorStateData.getPitch(),
@@ -106,18 +113,49 @@ public class ControllerView extends RelativeLayout {
             )))
         );
 
+        mToggleSimulator.setOnCheckedChangeListener((buttonView, checked) -> {
+            if (checked) {
+                this.setLoggerMode(LOGGER_TEXT);
+                DJISampleApplication.getAircraftInstance().getFlightController().getSimulator().startSimulator(
+                    new DJISimulatorInitializationData(
+                        SIMULATOR_INITIAL_LATITUDE,
+                        SIMULATOR_INITIAL_LONGITUDE,
+                        SIMULATION_UPDATE_FREQUENCY,
+                        SIMULATOR_INITIAL_NUM_OF_SATELLITES
+                    ),
+                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
+                );
+            } else {
+                this.setLoggerMode(LOGGER_LIST);
+                DJISampleApplication.getAircraftInstance().getFlightController().getSimulator().stopSimulator(
+                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
+                );
+            }
+        });
+
         mToggleAdvFlightMode.setOnCheckedChangeListener((buttonView, checked) -> {
-            if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
-            DJISampleApplication.getAircraftInstance().getFlightController().setVirtualStickAdvancedModeEnabled(checked);
+            this.setLoggerMode(LOGGER_LIST);
+            if (this.isFlightControllerNotAvailiable()) return;
+            if (checked) {
+                DJISampleApplication.getAircraftInstance().getFlightController().setVirtualStickAdvancedModeEnabled(true);
+                this.log2ListLogger(R.string.advanced_flight_mode_on);
+            } else {
+                DJISampleApplication.getAircraftInstance().getFlightController().setVirtualStickAdvancedModeEnabled(false);
+                this.log2ListLogger(R.string.advanced_flight_mode_off);
+            }
+
         });
 
         mToggleVirtualStick.setOnCheckedChangeListener((buttonView, checked) -> {
-            if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
+            if (this.isFlightControllerNotAvailiable()) return;
             if (checked) {
+                this.setLoggerMode(LOGGER_LIST);
+                mCommandIndex = 0;
                 DJISampleApplication.getAircraftInstance().getFlightController().enableVirtualStickControlMode(
                     djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
                 );
             } else {
+                this.setLoggerMode(LOGGER_TEXT);
                 DJISampleApplication.getAircraftInstance().getFlightController().disableVirtualStickControlMode(
                     djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
                 );
@@ -127,17 +165,24 @@ public class ControllerView extends RelativeLayout {
         /* Set Action Button Handlers */
 
         mBtnTakeOff.setOnClickListener(v -> {
-            if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
-            Toast.makeText(this.getContext(), "FlightController is availiable. Sending TakeOff Command", Toast.LENGTH_SHORT).show();
+            this.setLoggerMode(LOGGER_LIST);
+            if (this.isFlightControllerNotAvailiable()) return;
             DJISampleApplication.getAircraftInstance().getFlightController().takeOff(
                 djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
             );
         });
-        mBtnCustomAction1.setOnClickListener(v -> Toast.makeText(this.getContext(), "Not Implemented", Toast.LENGTH_SHORT).show());
-        mBtnCustomAction2.setOnClickListener(v -> Toast.makeText(this.getContext(), "Not Implemented", Toast.LENGTH_SHORT).show());
+        mBtnCustomAction1.setOnClickListener(v -> {
+            this.setLoggerMode(LOGGER_LIST);
+            this.log2ListLogger("Not Implemented");
+        });
+        mBtnCustomAction2.setOnClickListener(v -> {
+            this.setLoggerMode(LOGGER_LIST);
+            this.log2ListLogger("Not Implemented");
+        });
 
         /* Set Joystick Handlers */
         mScreenJoystickLeft.setJoystickListener((joystick, pX, pY) -> {
+            this.setLoggerMode(LOGGER_TEXT);
             if(Math.abs(pX) < 0.02 ) pX = 0;
             if(Math.abs(pY) < 0.02 ) pY = 0;
 
@@ -155,6 +200,7 @@ public class ControllerView extends RelativeLayout {
         });
 
         mScreenJoystickRight.setJoystickListener((joystick, pX, pY) -> {
+            this.setLoggerMode(LOGGER_TEXT);
             if(Math.abs(pX) < 0.02 ) pX = 0;
             if(Math.abs(pY) < 0.02 ) pY = 0;
 
@@ -175,11 +221,36 @@ public class ControllerView extends RelativeLayout {
     class SendVirtualStickDataTask extends TimerTask {
         @Override
         public void run() {
-            if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
+            if (ControllerView.this.isFlightControllerNotAvailiable()) return;
+            ControllerView.this.log2ListLogger(String.format("[YPRT] : [ %4f | %4f | %4f | %4f ]", mYaw, mPitch, mRoll, mThrottle));
+            ControllerView.this.mCommandIndex++;
             DJISampleApplication.getAircraftInstance().getFlightController().sendVirtualStickFlightControlData(
                 new DJIVirtualStickFlightControlData(mPitch, mRoll, mYaw, mThrottle),
                 djiError -> {}
             );
         }
+    }
+
+    /* Priavte Methods */
+    private boolean isFlightControllerNotAvailiable() {
+        final boolean availiable = DJIModuleVerificationUtil.isFlightControllerAvailable();
+        if (!availiable) this.log2ListLogger("FlightController Not Availiable");
+        return !availiable;
+    }
+
+    /* Loggers */
+    public static boolean LOGGER_TEXT = true;
+    public static boolean LOGGER_LIST = false;
+    private void setLoggerMode(boolean mode) {
+        mTextLogger.setVisibility(mode==LOGGER_TEXT ? VISIBLE : GONE);
+        mListLogger.setVisibility(mode==LOGGER_LIST ? VISIBLE : GONE);
+    }
+    private void log2ListLogger(int resid) {
+        log2ListLogger(this.getContext().getResources().getString(resid));
+    }
+    private void log2ListLogger(String log) {
+        Timber.d(log);
+        mLog.add(0, log);
+        mAdapter.notifyDataSetChanged();
     }
 }

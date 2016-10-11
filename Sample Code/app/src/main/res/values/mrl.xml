@@ -1,0 +1,19 @@
+<resources>
+
+    <string name="btn_toggle_simulator_on">Stop Flight Simulator</string>
+    <string name="btn_toggle_simulator_off">Start Flight Simulator</string>
+    <string name="btn_toggle_advanced_flight_mode_on">Disable Adv. Flight Mode</string>
+    <string name="btn_toggle_advanced_flight_mode_off">Enable Adv. Flight Mode</string>
+    <string name="btn_toggle_virtual_stick_on">Disable V.Stick</string>
+    <string name="btn_toggle_virtual_stick_off">Enable V.Stick</string>
+
+    <string name="btn_take_off_text">Take Off</string>
+    <string name="btn_custom_action1_text">Custom Action 1</string>
+    <string name="btn_custom_action2_text">Custom Action 2</string>
+
+    <string name="actions_header_text">Available Actions</string>
+    <string name="simulator_header_text">Simulator Logger</string>
+
+    <string name="advanced_flight_mode_on">Enabled Advanced Flight Mode</string>
+    <string name="advanced_flight_mode_off">Disabled Advanced Flight Mode</string>
+</resources>
