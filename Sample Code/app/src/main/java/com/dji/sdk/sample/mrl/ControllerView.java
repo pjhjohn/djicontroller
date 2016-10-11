@@ -23,6 +23,7 @@ import com.dji.sdk.sample.utils.OnScreenJoystick;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -30,7 +31,13 @@ import butterknife.Unbinder;
 import dji.common.flightcontroller.DJIFlightControllerDataType;
 import dji.common.flightcontroller.DJISimulatorInitializationData;
 import dji.common.flightcontroller.DJIVirtualStickFlightControlData;
+import dji.thirdparty.rx.Observable;
+import dji.thirdparty.rx.Subscriber;
+import dji.thirdparty.rx.android.schedulers.AndroidSchedulers;
+import dji.thirdparty.rx.schedulers.Schedulers;
 import timber.log.Timber;
+
+import static android.R.attr.value;
 
 public class ControllerView extends RelativeLayout {
 
@@ -163,7 +170,6 @@ public class ControllerView extends RelativeLayout {
         });
 
         /* Set Action Button Handlers */
-
         mBtnTakeOff.setOnClickListener(v -> {
             this.setLoggerMode(LOGGER_LIST);
             if (this.isFlightControllerNotAvailiable()) return;
@@ -173,7 +179,22 @@ public class ControllerView extends RelativeLayout {
         });
         mBtnCustomAction1.setOnClickListener(v -> {
             this.setLoggerMode(LOGGER_LIST);
-            this.log2ListLogger("Not Implemented");
+            Integer[] commandIndexes = {1, 2, 3, 4, 5};
+            Observable.from(commandIndexes)
+                .flatMap( val -> Observable.just(val).delay(200, TimeUnit.MILLISECONDS))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe( cmdIndex -> {
+                    if (ControllerView.this.isFlightControllerNotAvailiable()) return;
+                    float y = 0.0f, p = 0.0f, r = 0.0f, t = DJIFlightControllerDataType.DJIVirtualStickVerticalControlMaxVelocity * 0.5f;
+                    ControllerView.this.log2ListLogger(String.format("CMD#%d : [ %4f | %4f | %4f | %4f ]", cmdIndex, y, p, r, t)); // Yaw, Pitch, Roll, Throttle
+                    ControllerView.this.mCommandIndex++;
+                    DJISampleApplication.getAircraftInstance().getFlightController().sendVirtualStickFlightControlData(
+                        new DJIVirtualStickFlightControlData(p, r, y, t),
+                        djiError -> {}
+                    );
+                }
+            );
         });
         mBtnCustomAction2.setOnClickListener(v -> {
             this.setLoggerMode(LOGGER_LIST);
@@ -218,6 +239,7 @@ public class ControllerView extends RelativeLayout {
         });
     }
 
+    // TODO : Replace with Observables
     class SendVirtualStickDataTask extends TimerTask {
         @Override
         public void run() {
