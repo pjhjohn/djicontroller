@@ -179,9 +179,9 @@ public class ControllerView extends RelativeLayout {
         });
         mBtnCustomAction1.setOnClickListener(v -> {
             this.setLoggerMode(LOGGER_LIST);
-            Integer[] commandIndexes = {1, 2, 3, 4, 5};
+            Integer[] commandIndexes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
             Observable.from(commandIndexes)
-                .flatMap( val -> Observable.just(val).delay(200, TimeUnit.MILLISECONDS))
+                .concatMap( val -> Observable.just(val).delay(200, TimeUnit.MILLISECONDS))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe( cmdIndex -> {
