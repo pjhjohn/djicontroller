@@ -28,9 +28,15 @@
                 set:list_item_name="@string/component_listview_controller"
                 set:sub_Layout="@layout/content_main"
                 set:component_name="@string/component_mrl"
-                set:view_name="@string/view_controller">
+                set:view_name="@string/view_controller"/>
 
-            </com.dji.sdk.sample.common.ListViewItem>
+            <com.dji.sdk.sample.common.ListViewItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                set:list_item_name="@string/component_listview_button_controller"
+                set:sub_Layout="@layout/content_main"
+                set:component_name="@string/component_mrl"
+                set:view_name="@string/view_button_controller"/>
 
             <TextView
                 android:layout_width="wrap_content"

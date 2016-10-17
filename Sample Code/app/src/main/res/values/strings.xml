@@ -17,6 +17,7 @@
     <!-- Component list -->
     <string name="component_listview_mrl">MRL</string>
     <string name="component_listview_controller">Controller</string>
+    <string name="component_listview_button_controller">ButtonController</string>
     <string name="component_listview_component">Component</string>
     <string name="component_listview_camera">Camera</string>
     <string name="component_listview_gimbal">Gimbal</string>
@@ -158,6 +159,7 @@
 
     <!-- View MRL class name -->
     <string name="view_controller">ControllerView</string>
+    <string name="view_button_controller">ButtonControllerView</string>
 
     <!-- View camera class name -->
     <string name="view_set_get_iso">SetGetISOView</string>

@@ -1,13 +1,15 @@
 <resources>
+    <string name="btn_toggle_simulator_on">Stop Simulator</string>
+    <string name="btn_toggle_simulator_off">Start Simulator</string>
+    <string name="btn_toggle_advanced_flight_mode_on">Disable Adv. Flight</string>
+    <string name="btn_toggle_advanced_flight_mode_off">Enable Adv. Flight</string>
+    <string name="btn_toggle_virtual_stick_on">Disable V. Stick</string>
+    <string name="btn_toggle_virtual_stick_off">Enable V. Stick</string>
+    <string name="btn_toggle_episode_start">Episode Start</string>
+    <string name="btn_toggle_episode_end">Episode End</string>
 
-    <string name="btn_toggle_simulator_on">Stop Flight Simulator</string>
-    <string name="btn_toggle_simulator_off">Start Flight Simulator</string>
-    <string name="btn_toggle_advanced_flight_mode_on">Disable Adv. Flight Mode</string>
-    <string name="btn_toggle_advanced_flight_mode_off">Enable Adv. Flight Mode</string>
-    <string name="btn_toggle_virtual_stick_on">Disable Virtual Stick</string>
-    <string name="btn_toggle_virtual_stick_off">Enable Virtual Stick</string>
-
-    <string name="btn_take_off_text">Take Off</string>
+    <string name="btn_text_take_off">Take Off</string>
+    <string name="btn_text_auto_landing">Auto Landing</string>
     <string name="btn_custom_action1_text">Custom Action 1</string>
     <string name="btn_custom_action2_text">Custom Action 2</string>
 
@@ -16,4 +18,13 @@
 
     <string name="advanced_flight_mode_on">Enabled Advanced Flight Mode</string>
     <string name="advanced_flight_mode_off">Disabled Advanced Flight Mode</string>
+
+    <string name="btn_text_move_up">move up</string>
+    <string name="btn_text_move_down">move down</string>
+    <string name="btn_text_move_left">move left</string>
+    <string name="btn_text_move_right">move right</string>
+    <string name="btn_text_move_forward">move forward</string>
+    <string name="btn_text_move_backward">move backward</string>
+    <string name="btn_text_turn_left">turn left</string>
+    <string name="btn_text_turn_right">turn right</string>
 </resources>
