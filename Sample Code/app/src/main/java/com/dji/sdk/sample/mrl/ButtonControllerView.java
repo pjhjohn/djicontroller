@@ -1,8 +1,6 @@
 package com.dji.sdk.sample.mrl;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,7 +9,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -19,11 +16,8 @@ import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.common.DJISampleApplication;
 import com.dji.sdk.sample.common.Utils;
 import com.dji.sdk.sample.utils.DJIModuleVerificationUtil;
-import com.dji.sdk.sample.utils.OnScreenJoystick;
 
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
@@ -40,13 +34,14 @@ import timber.log.Timber;
 
 public class ButtonControllerView extends RelativeLayout {
 
+    private final double SIMULATOR_INITIAL_LATITUDE = 20;
+    private final double SIMULATOR_INITIAL_LONGITUDE = 20;
+    private final int SIMULATION_UPDATE_FREQUENCY = 10;
+    private final int SIMULATOR_INITIAL_NUM_OF_SATELLITES = 10;
+
     @BindView(R.id.logger_textlist) protected ListView mListLogger;
 
-    @BindView(R.id.btn_toggle_advanced_flight_mode) protected ToggleButton mToggleAdvFlightMode;
-    @BindView(R.id.btn_toggle_virtual_stick) protected ToggleButton mToggleVirtualStick;
-    @BindView(R.id.btn_toggle_episode) protected ToggleButton mToggleEpisode;
     @BindView(R.id.btn_toggle_take_off) protected ToggleButton mToggleTakeOff;
-
     @BindView(R.id.btn_move_up) protected Button mBtnMoveUp;
     @BindView(R.id.btn_move_down) protected Button mBtnMoveDown;
     @BindView(R.id.btn_move_left) protected Button mBtnMoveLeft;
@@ -55,6 +50,11 @@ public class ButtonControllerView extends RelativeLayout {
     @BindView(R.id.btn_move_backward) protected Button mBtnMoveBackward;
     @BindView(R.id.btn_turn_left) protected Button mBtnTurnLeft;
     @BindView(R.id.btn_turn_right) protected Button mBtnTurnRight;
+
+    @BindView(R.id.btn_toggle_advanced_flight_mode) protected ToggleButton mToggleAdvFlightMode;
+    @BindView(R.id.btn_toggle_virtual_stick) protected ToggleButton mToggleVirtualStick;
+    @BindView(R.id.btn_toggle_episode) protected ToggleButton mToggleEpisode;
+    @BindView(R.id.btn_toggle_simulator) protected ToggleButton mToggleSimulator;
 
     private Unbinder mUnbinder;
 
@@ -116,12 +116,30 @@ public class ButtonControllerView extends RelativeLayout {
             }
         });
 
+        mToggleSimulator.setOnCheckedChangeListener((buttonView, checked) -> {
+            if (checked) {
+                DJISampleApplication.getAircraftInstance().getFlightController().getSimulator().startSimulator(
+                    new DJISimulatorInitializationData(
+                        SIMULATOR_INITIAL_LATITUDE,
+                        SIMULATOR_INITIAL_LONGITUDE,
+                        SIMULATION_UPDATE_FREQUENCY,
+                        SIMULATOR_INITIAL_NUM_OF_SATELLITES
+                    ),
+                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
+                );
+            } else {
+                DJISampleApplication.getAircraftInstance().getFlightController().getSimulator().stopSimulator(
+                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
+                );
+            }
+        });
+
         mToggleEpisode.setOnCheckedChangeListener((buttonView, checked) -> {
             if (this.isFlightControllerNotAvailiable()) return;
             if (checked) {
                 Toast.makeText(ButtonControllerView.this.getContext(), R.string.btn_toggle_episode_start, Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(ButtonControllerView.this.getContext(), R.string.btn_toggle_episode_end, Toast.LENGTH_SHORT).show();
+                Toast.makeText(ButtonControllerView.this.getContext(), R.string.btn_toggle_episode_stop, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -145,8 +163,32 @@ public class ButtonControllerView extends RelativeLayout {
         mBtnMoveRight.setOnClickListener    (v -> getDummyObservable( 0.5f, 0.0f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
         mBtnMoveForward.setOnClickListener  (v -> getDummyObservable( 0.0f, 0.5f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
         mBtnMoveBackward.setOnClickListener (v -> getDummyObservable( 0.0f,-0.5f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
-        mBtnTurnLeft.setOnClickListener     (v -> getDummyObservable( 0.0f, 0.0f, 0.0f,-0.5f).subscribe(this.sendVirtualStickCommand));
-        mBtnTurnRight.setOnClickListener    (v -> getDummyObservable( 0.0f, 0.0f, 0.0f, 0.5f).subscribe(this.sendVirtualStickCommand));
+        mBtnTurnLeft.setOnClickListener     (v -> {
+            Integer[] commandIndexes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+            Observable.from(commandIndexes)
+                .concatMap( val -> Observable.just(val).delay(200, TimeUnit.MILLISECONDS))
+                .map(index -> new VirtualStickCommand(index, 0.0f, 0.0f, 0.0f,-0.5f))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this.sendVirtualStickCommand);
+        });
+        mBtnTurnRight.setOnClickListener    (v -> {
+            Integer[] commandIndexes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+            Observable.from(commandIndexes)
+                .concatMap( val -> Observable.just(val).delay(200, TimeUnit.MILLISECONDS))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe( cmdIndex -> {
+                        if (ButtonControllerView.this.isFlightControllerNotAvailiable()) return;
+                        float y = 0.0f, p = 0.0f, r = 0.0f, t = DJIFlightControllerDataType.DJIVirtualStickVerticalControlMaxVelocity * 0.5f;
+                        ButtonControllerView.this.log2ListLogger(String.format("CMD#%d : [ %4f | %4f | %4f | %4f ]", cmdIndex, y, p, r, t)); // Yaw, Pitch, Roll, Throttle
+                        DJISampleApplication.getAircraftInstance().getFlightController().sendVirtualStickFlightControlData(
+                            new DJIVirtualStickFlightControlData(p, r, y, t),
+                            djiError -> {}
+                        );
+                    }
+                );
+        });
     }
 
     private Action1<VirtualStickCommand> sendVirtualStickCommand = (cmd) -> {
@@ -157,7 +199,7 @@ public class ButtonControllerView extends RelativeLayout {
         )); // Yaw, Pitch, Roll, Throttle
         DJISampleApplication.getAircraftInstance().getFlightController().sendVirtualStickFlightControlData(
             new DJIVirtualStickFlightControlData(cmd.getPitch(), cmd.getRoll(), cmd.getYaw(), cmd.getThrottle()),
-            djiError -> ButtonControllerView.this.log2ListLogger(djiError.getDescription())
+            djiError -> {}
         );
     };
 

@@ -5,8 +5,8 @@
     <string name="btn_toggle_advanced_flight_mode_off">Enable Adv. Flight</string>
     <string name="btn_toggle_virtual_stick_on">Disable V. Stick</string>
     <string name="btn_toggle_virtual_stick_off">Enable V. Stick</string>
-    <string name="btn_toggle_episode_start">Episode Start</string>
-    <string name="btn_toggle_episode_end">Episode End</string>
+    <string name="btn_toggle_episode_start">Start New Episode</string>
+    <string name="btn_toggle_episode_stop">Stop Current Episode</string>
 
     <string name="btn_text_take_off">Take Off</string>
     <string name="btn_text_auto_landing">Auto Landing</string>

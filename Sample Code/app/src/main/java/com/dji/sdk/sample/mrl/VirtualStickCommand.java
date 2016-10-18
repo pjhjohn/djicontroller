@@ -21,6 +21,13 @@ public class VirtualStickCommand {
         this.setYaw(0);
         this.setThrottle(0);
     }
+    public VirtualStickCommand(int index) {
+        this.setIndex(index);
+        this.setPitch(0);
+        this.setRoll(0);
+        this.setYaw(0);
+        this.setThrottle(0);
+    }
     public VirtualStickCommand(int index, float pitch, float roll, float yaw, float throttle) {
         this.setIndex(index);
         this.setPitch(pitch);
