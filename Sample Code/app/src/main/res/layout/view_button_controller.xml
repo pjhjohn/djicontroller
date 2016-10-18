@@ -2,8 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="8dp">
+    android:layout_height="match_parent">
 
     <TextView
         android:id="@+id/simulator_header"
@@ -42,8 +41,7 @@
         android:columnCount="3"
         android:rowCount="3"
         android:orientation="horizontal"
-        android:layout_above="@+id/action_toggles_container"
-        android:layout_marginBottom="8dp">
+        android:layout_above="@+id/action_toggles_container">
 
         <Button
             style="@style/common_button"
@@ -108,8 +106,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:weightSum="4"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="8dp">
+        android:layout_alignParentBottom="true">
 
         <ToggleButton
             style="@style/common_button"
