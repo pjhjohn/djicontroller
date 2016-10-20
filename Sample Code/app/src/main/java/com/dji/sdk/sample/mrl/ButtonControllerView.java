@@ -15,6 +15,7 @@ import android.widget.ToggleButton;
 import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.common.DJISampleApplication;
 import com.dji.sdk.sample.common.Utils;
+import com.dji.sdk.sample.mrl.network.api.Api;
 import com.dji.sdk.sample.utils.DJIModuleVerificationUtil;
 
 import java.util.ArrayList;
@@ -137,7 +138,9 @@ public class ButtonControllerView extends RelativeLayout {
         mToggleEpisode.setOnCheckedChangeListener((buttonView, checked) -> {
             if (this.isFlightControllerNotAvailiable()) return;
             if (checked) {
-                Toast.makeText(ButtonControllerView.this.getContext(), R.string.btn_toggle_episode_start, Toast.LENGTH_SHORT).show();
+                Api.database().getEpisodes().observeOn(AndroidSchedulers.mainThread()).subscribe(episodes ->
+                    Toast.makeText(ButtonControllerView.this.getContext(), "" + episodes.size(), Toast.LENGTH_SHORT).show()
+                );
             } else {
                 Toast.makeText(ButtonControllerView.this.getContext(), R.string.btn_toggle_episode_stop, Toast.LENGTH_SHORT).show();
             }
