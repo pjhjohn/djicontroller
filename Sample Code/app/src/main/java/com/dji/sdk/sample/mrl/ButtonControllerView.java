@@ -16,6 +16,7 @@ import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.common.DJISampleApplication;
 import com.dji.sdk.sample.common.Utils;
 import com.dji.sdk.sample.mrl.network.api.Api;
+import com.dji.sdk.sample.mrl.network.model.Episode;
 import com.dji.sdk.sample.utils.DJIModuleVerificationUtil;
 
 import java.util.ArrayList;
@@ -27,6 +28,9 @@ import butterknife.Unbinder;
 import dji.common.flightcontroller.DJIFlightControllerDataType;
 import dji.common.flightcontroller.DJISimulatorInitializationData;
 import dji.common.flightcontroller.DJIVirtualStickFlightControlData;
+import dji.thirdparty.retrofit2.Call;
+import dji.thirdparty.retrofit2.Callback;
+import dji.thirdparty.retrofit2.Response;
 import dji.thirdparty.rx.Observable;
 import dji.thirdparty.rx.android.schedulers.AndroidSchedulers;
 import dji.thirdparty.rx.functions.Action1;
@@ -138,9 +142,18 @@ public class ButtonControllerView extends RelativeLayout {
         mToggleEpisode.setOnCheckedChangeListener((buttonView, checked) -> {
             if (this.isFlightControllerNotAvailiable()) return;
             if (checked) {
-                Api.database().getEpisodes().observeOn(AndroidSchedulers.mainThread()).subscribe(episodes ->
-                    Toast.makeText(ButtonControllerView.this.getContext(), "" + episodes.size(), Toast.LENGTH_SHORT).show()
-                );
+                Call<ArrayList<Episode>> call = Api.database().getEpisodes();
+                call.enqueue(new Callback<ArrayList<Episode>>() {
+                    @Override
+                    public void onResponse(Call<ArrayList<Episode>> call, Response<ArrayList<Episode>> response) {
+                        Toast.makeText(ButtonControllerView.this.getContext(), response.body().size(), Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFailure(Call<ArrayList<Episode>> call, Throwable throwable) {
+                        Toast.makeText(ButtonControllerView.this.getContext(), "call failed : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
             } else {
                 Toast.makeText(ButtonControllerView.this.getContext(), R.string.btn_toggle_episode_stop, Toast.LENGTH_SHORT).show();
             }
@@ -183,10 +196,10 @@ public class ButtonControllerView extends RelativeLayout {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe( cmdIndex -> {
                         if (ButtonControllerView.this.isFlightControllerNotAvailiable()) return;
-                        float y = 0.0f, p = 0.0f, r = 0.0f, t = DJIFlightControllerDataType.DJIVirtualStickVerticalControlMaxVelocity * 0.5f;
-                        ButtonControllerView.this.log2ListLogger(String.format("CMD#%d : [ %4f | %4f | %4f | %4f ]", cmdIndex, y, p, r, t)); // Yaw, Pitch, Roll, Throttle
+                        VirtualStickCommand cmd = new VirtualStickCommand(cmdIndex, 0.0f, 0.0f, 0.0f, DJIFlightControllerDataType.DJIVirtualStickVerticalControlMaxVelocity * 0.5f);
+                        ButtonControllerView.this.log2ListLogger(cmd.toString()); // Yaw, Pitch, Roll, Throttle
                         DJISampleApplication.getAircraftInstance().getFlightController().sendVirtualStickFlightControlData(
-                            new DJIVirtualStickFlightControlData(p, r, y, t),
+                            cmd.toDJIVirtualStickFlightControlData(),
                             djiError -> {}
                         );
                     }
@@ -196,12 +209,9 @@ public class ButtonControllerView extends RelativeLayout {
 
     private Action1<VirtualStickCommand> sendVirtualStickCommand = (cmd) -> {
         if (ButtonControllerView.this.isFlightControllerNotAvailiable()) return;
-        ButtonControllerView.this.log2ListLogger(String.format(
-            "CMD#%d : [ %4f | %4f | %4f | %4f ]",
-            cmd.getIndex(), cmd.getYaw(), cmd.getPitch(), cmd.getRoll(), cmd.getThrottle()
-        )); // Yaw, Pitch, Roll, Throttle
+        ButtonControllerView.this.log2ListLogger(cmd.toString()); // Yaw, Pitch, Roll, Throttle
         DJISampleApplication.getAircraftInstance().getFlightController().sendVirtualStickFlightControlData(
-            new DJIVirtualStickFlightControlData(cmd.getPitch(), cmd.getRoll(), cmd.getYaw(), cmd.getThrottle()),
+            cmd.toDJIVirtualStickFlightControlData(),
             djiError -> {}
         );
     };

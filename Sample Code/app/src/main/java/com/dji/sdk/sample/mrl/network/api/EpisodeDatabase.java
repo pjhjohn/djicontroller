@@ -1,23 +1,26 @@
 package com.dji.sdk.sample.mrl.network.api;
 
 
-import com.dji.sdk.sample.mrl.network.model.Command;
 import com.dji.sdk.sample.mrl.network.model.Episode;
 
 import java.util.ArrayList;
 
-import dji.thirdparty.retrofit2.http.Field;
+import dji.thirdparty.retrofit2.Call;
+import dji.thirdparty.retrofit2.http.Body;
 import dji.thirdparty.retrofit2.http.GET;
 import dji.thirdparty.retrofit2.http.POST;
-import dji.thirdparty.rx.Observable;
+import dji.thirdparty.retrofit2.http.Path;
 
 /**
  * Created by pjhjohn on 2015-10-28.
  */
 public interface EpisodeDatabase {
     @POST("episodes")
-    Observable<Void> createEpisode(@Field("name") String name, @Field("commands[]") ArrayList<Command> commands);
+    Call<Void> createEpisode(@Body Episode episode);
 
     @GET("episodes")
-    Observable<ArrayList<Episode>> getEpisodes();
+    Call<ArrayList<Episode>> getEpisodes();
+
+    @GET("episodes/{id}")
+    Call<ArrayList<Episode>> getEpisode(@Path("id") Integer id);
 }

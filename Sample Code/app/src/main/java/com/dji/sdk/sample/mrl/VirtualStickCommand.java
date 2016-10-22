@@ -1,6 +1,9 @@
 package com.dji.sdk.sample.mrl;
 
+import com.dji.sdk.sample.mrl.network.model.Command;
+
 import dji.common.flightcontroller.DJIFlightControllerDataType;
+import dji.common.flightcontroller.DJIVirtualStickFlightControlData;
 
 /**
  * Created by pjhjohn on 10/17/16.
@@ -84,6 +87,27 @@ public class VirtualStickCommand {
         if (value > 1.0f) return 1.0f;
         else if (value < -1.0f) return -1.0f;
         else return value;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("CMD#%d : [ %4f | %4f | %4f | %4f ]",
+            this.getIndex(), this.getYaw(), this.getPitch(), this.getRoll(), this.getThrottle()
+        ); // Index, Yaw, Pitch, Roll, Throttle
+    }
+
+    public Command toEpisodeCommand() {
+        Command command = new Command();
+        command.index = this.getIndex();
+        command.yaw = this.getYaw();
+        command.pitch = this.getPitch();
+        command.roll = this.getRoll();
+        command.throttle = this.getThrottle();
+        return command;
+    }
+
+    public DJIVirtualStickFlightControlData toDJIVirtualStickFlightControlData() {
+        return new DJIVirtualStickFlightControlData(this.getPitch(), this.getRoll(), this.getYaw(), this.getThrottle());
     }
 }
 
