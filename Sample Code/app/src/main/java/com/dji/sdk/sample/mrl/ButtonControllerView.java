@@ -25,9 +25,7 @@ import java.util.concurrent.TimeUnit;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
-import dji.common.flightcontroller.DJIFlightControllerDataType;
 import dji.common.flightcontroller.DJISimulatorInitializationData;
-import dji.common.flightcontroller.DJIVirtualStickFlightControlData;
 import dji.thirdparty.retrofit2.Call;
 import dji.thirdparty.retrofit2.Callback;
 import dji.thirdparty.retrofit2.Response;
@@ -173,12 +171,19 @@ public class ButtonControllerView extends RelativeLayout {
         });
 
         /* Set Action Button Handlers */
-        mBtnMoveUp.setOnClickListener       (v -> getDummyObservable( 0.0f, 0.0f, 0.5f, 0.0f).subscribe(this.sendVirtualStickCommand));
-        mBtnMoveDown.setOnClickListener     (v -> getDummyObservable( 0.0f, 0.0f,-0.5f, 0.0f).subscribe(this.sendVirtualStickCommand));
-        mBtnMoveLeft.setOnClickListener     (v -> getDummyObservable(-0.5f, 0.0f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
-        mBtnMoveRight.setOnClickListener    (v -> getDummyObservable( 0.5f, 0.0f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
-        mBtnMoveForward.setOnClickListener  (v -> getDummyObservable( 0.0f, 0.5f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
-        mBtnMoveBackward.setOnClickListener (v -> getDummyObservable( 0.0f,-0.5f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
+        mBtnMoveUp.setOnClickListener       (v -> getDummyObservable( 0.0f, 0.0f, 0.0f, 1.0f).subscribe(this.sendVirtualStickCommand));
+        mBtnMoveDown.setOnClickListener     (v -> getDummyObservable( 0.0f, 0.0f,0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
+
+
+        mBtnMoveLeft.setOnClickListener     (v -> getDummyObservable(0.0f, -0.5f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
+        mBtnMoveRight.setOnClickListener    (v -> getDummyObservable( 0.0f, 0.5f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
+        mBtnMoveForward.setOnClickListener  (v -> getDummyObservable( -0.5f, 0.0f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
+        mBtnMoveBackward.setOnClickListener (v -> getDummyObservable( 0.5f,0.0f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
+
+
+        mBtnTurnLeft.setOnClickListener (v -> getDummyObservable( 0.0f,0.0f, -0.5f, 0.0f).subscribe(this.sendVirtualStickCommand));
+        mBtnTurnRight.setOnClickListener (v -> getDummyObservable( 0.0f,0.0f, 0.5f, 0.0f).subscribe(this.sendVirtualStickCommand));
+        /*
         mBtnTurnLeft.setOnClickListener     (v -> {
             Integer[] commandIndexes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
             Observable.from(commandIndexes)
@@ -204,7 +209,7 @@ public class ButtonControllerView extends RelativeLayout {
                         );
                     }
                 );
-        });
+        });*/
     }
 
     private Action1<VirtualStickCommand> sendVirtualStickCommand = (cmd) -> {
@@ -214,7 +219,7 @@ public class ButtonControllerView extends RelativeLayout {
             cmd.toDJIVirtualStickFlightControlData(),
             djiError -> {}
         );
-    };
+    };s
 
     /* Priavte Methods */
     private boolean isFlightControllerNotAvailiable() {

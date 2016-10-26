@@ -14,16 +14,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
-import dji.common.flightcontroller.DJIFlightControllerDataType;
-import dji.common.flightcontroller.DJISimulatorInitializationData;
-import dji.common.flightcontroller.DJISimulatorStateData;
-import dji.common.flightcontroller.DJIVirtualStickFlightControlData;
-import dji.common.flightcontroller.DJIVirtualStickFlightCoordinateSystem;
-import dji.common.flightcontroller.DJIVirtualStickRollPitchControlMode;
-import dji.common.flightcontroller.DJIVirtualStickVerticalControlMode;
-import dji.common.flightcontroller.DJIVirtualStickYawControlMode;
-import dji.common.util.DJICommonCallbacks;
-
 import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.common.DJISampleApplication;
 import com.dji.sdk.sample.common.Utils;
@@ -35,8 +25,16 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import dji.common.error.DJIError;
-import dji.common.util.DJICommonCallbacks.*;
-import dji.sdk.base.DJIBaseComponent;
+import dji.common.flightcontroller.DJIFlightControllerDataType;
+import dji.common.flightcontroller.DJISimulatorInitializationData;
+import dji.common.flightcontroller.DJISimulatorStateData;
+import dji.common.flightcontroller.DJIVirtualStickFlightControlData;
+import dji.common.flightcontroller.DJIVirtualStickFlightCoordinateSystem;
+import dji.common.flightcontroller.DJIVirtualStickRollPitchControlMode;
+import dji.common.flightcontroller.DJIVirtualStickVerticalControlMode;
+import dji.common.flightcontroller.DJIVirtualStickYawControlMode;
+import dji.common.util.DJICommonCallbacks;
+import dji.common.util.DJICommonCallbacks.DJICompletionCallback;
 import dji.sdk.flightcontroller.DJISimulator;
 
 /**

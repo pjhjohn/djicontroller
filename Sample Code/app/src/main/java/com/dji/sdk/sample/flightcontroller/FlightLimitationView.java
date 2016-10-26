@@ -11,7 +11,6 @@ import com.dji.sdk.sample.utils.DJIModuleVerificationUtil;
 
 import dji.common.error.DJIError;
 import dji.common.util.DJICommonCallbacks;
-import dji.sdk.base.DJIBaseComponent;
 
 /**
  * Class for flight limitation.
@@ -47,7 +46,7 @@ public class FlightLimitationView extends BaseThreeBtnView {
     protected void getMiddleBtnMethod() {
         if (DJIModuleVerificationUtil.isFlightLimitationAvailable()) {
             DJISampleApplication.getAircraftInstance().getFlightController().
-                getFlightLimitation().setMaxFlightHeight(50,
+                getFlightLimitation().setMaxFlightHeight(150,
                     new DJICommonCallbacks.DJICompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
