@@ -17,21 +17,35 @@ public class VirtualStickCommand {
 
     private int index;
     private float pitch, roll, yaw, throttle;
+
+    public enum Direction {
+        FORWARD, BACKWARD, UP, DOWN, LEFT, RIGHT, CW, CCW
+    }
+
+    public VirtualStickCommand(Direction direction) {
+        float pitch = 0, roll = 0, yaw = 0, throttle = 0;
+        switch (direction) {
+            case FORWARD  : pitch    = -0.5f; break;
+            case BACKWARD : pitch    =  0.5f; break;
+            case LEFT     : roll     = -0.5f; break;
+            case RIGHT    : roll     =  0.5f; break;
+            case CCW      : yaw      = -0.5f; break;
+            case CW       : yaw      =  0.5f; break;
+            case UP       : throttle =  1.0f; break;
+            case DOWN     : throttle =  0.0f; break;
+        } this.set(0, pitch, roll, yaw, throttle);
+    }
     public VirtualStickCommand() {
-        this.setIndex(0);
-        this.setPitch(0);
-        this.setRoll(0);
-        this.setYaw(0);
-        this.setThrottle(0);
+        this.set(0, 0, 0, 0, 0);
     }
     public VirtualStickCommand(int index) {
-        this.setIndex(index);
-        this.setPitch(0);
-        this.setRoll(0);
-        this.setYaw(0);
-        this.setThrottle(0);
+        this.set(index, 0, 0, 0, 0);
     }
     public VirtualStickCommand(int index, float pitch, float roll, float yaw, float throttle) {
+        this.set(index, pitch, roll, yaw, throttle);
+    }
+
+    private void set(int index, float pitch, float roll, float yaw, float throttle) {
         this.setIndex(index);
         this.setPitch(pitch);
         this.setRoll(roll);

@@ -63,14 +63,7 @@ public class EpisodeGeneratorView extends RelativeLayout {
 
     private ArrayList<String> mLog;
     private ArrayAdapter<String> mAdapter;
-    private static final Integer[] CMD_INDEXES = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    private Observable<VirtualStickCommand> getDummyObservable(float pitch, float roll, float yaw, float throttle) {
-        return Observable.from(CMD_INDEXES)
-            .concatMap( val -> Observable.just(val).delay(200, TimeUnit.MILLISECONDS))
-            .map(index -> new VirtualStickCommand(index, pitch, roll, yaw, throttle))
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread());
-    }
+    private Episode mEpisode;
 
     public EpisodeGeneratorView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -139,22 +132,8 @@ public class EpisodeGeneratorView extends RelativeLayout {
 
         mToggleEpisode.setOnCheckedChangeListener((buttonView, checked) -> {
             if (this.isFlightControllerNotAvailiable()) return;
-            if (checked) {
-                Call<ArrayList<Episode>> call = Api.database().getEpisodes();
-                call.enqueue(new Callback<ArrayList<Episode>>() {
-                    @Override
-                    public void onResponse(Call<ArrayList<Episode>> call, Response<ArrayList<Episode>> response) {
-                        Toast.makeText(EpisodeGeneratorView.this.getContext(), response.body().size(), Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onFailure(Call<ArrayList<Episode>> call, Throwable throwable) {
-                        Toast.makeText(EpisodeGeneratorView.this.getContext(), "call failed : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
-            } else {
-                Toast.makeText(EpisodeGeneratorView.this.getContext(), R.string.btn_toggle_episode_stop, Toast.LENGTH_SHORT).show();
-            }
+            if (checked) mEpisode = new Episode();
+            else mEpisode.getEpisodeObservable().subscribe(this.sendVirtualStickCommand);
         });
 
         mToggleTakeOff.setOnCheckedChangeListener((buttonView, checked) -> {
@@ -170,16 +149,15 @@ public class EpisodeGeneratorView extends RelativeLayout {
             }
         });
 
-        /* Set Action Button Handlers */
-        mBtnTurnLeft.setOnClickListener     (v -> getDummyObservable( 0.0f, 0.0f,-0.5f, 0.0f).subscribe(this.sendVirtualStickCommand));
-        mBtnTurnRight.setOnClickListener    (v -> getDummyObservable( 0.0f, 0.0f, 0.5f, 0.0f).subscribe(this.sendVirtualStickCommand));
-        mBtnMoveUp.setOnClickListener       (v -> getDummyObservable( 0.0f, 0.0f, 0.0f, 1.0f).subscribe(this.sendVirtualStickCommand));
-        mBtnMoveDown.setOnClickListener     (v -> getDummyObservable( 0.0f, 0.0f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
-
-        mBtnMoveLeft.setOnClickListener     (v -> getDummyObservable( 0.0f,-0.5f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
-        mBtnMoveRight.setOnClickListener    (v -> getDummyObservable( 0.0f, 0.5f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
-        mBtnMoveForward.setOnClickListener  (v -> getDummyObservable(-0.5f, 0.0f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
-        mBtnMoveBackward.setOnClickListener (v -> getDummyObservable( 0.5f, 0.0f, 0.0f, 0.0f).subscribe(this.sendVirtualStickCommand));
+        /* Add Command to Episode */
+        mBtnMoveForward.setOnClickListener  (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.FORWARD)));
+        mBtnMoveBackward.setOnClickListener (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.BACKWARD)));
+        mBtnMoveLeft.setOnClickListener     (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.LEFT)));
+        mBtnMoveRight.setOnClickListener    (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.RIGHT)));
+        mBtnMoveUp.setOnClickListener       (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.UP)));
+        mBtnMoveDown.setOnClickListener     (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.DOWN)));
+        mBtnTurnLeft.setOnClickListener     (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.CCW)));
+        mBtnTurnRight.setOnClickListener    (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.CW)));
     }
 
     private Action1<VirtualStickCommand> sendVirtualStickCommand = (cmd) -> {
