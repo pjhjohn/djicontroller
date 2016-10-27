@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/simulator_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:textStyle="bold"
+        android:text="@string/simulator_header_text"
+        />
+
+    <!--Logger Space-->
+    <ListView
+        android:id="@+id/logger_textlist"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/simulator_header"
+        android:layout_above="@+id/actions_header"
+        android:layout_centerHorizontal="true"
+        />
+
+    <!--Actions-->
+    <TextView
+        android:id="@+id/actions_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/action_buttons_container"
+        android:textStyle="bold"
+        android:text="@string/actions_header_text"
+        />
+
+    <!--Enable & Disable Virtual Stick-->
+    <GridLayout
+        android:id="@+id/action_buttons_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="3"
+        android:rowCount="3"
+        android:orientation="horizontal"
+        android:layout_above="@+id/action_toggles_container">
+
+        <Button
+            style="@style/common_button"
+            android:id="@+id/btn_turn_left"
+            android:text="@string/btn_text_turn_left"
+            android:layout_columnWeight="1"
+            />
+
+        <Button
+            style="@style/common_button"
+            android:id="@+id/btn_move_up"
+            android:text="@string/btn_text_move_up"
+            android:layout_columnWeight="1"
+            />
+        <Button
+            style="@style/common_button"
+            android:id="@+id/btn_move_forward"
+            android:text="@string/btn_text_move_forward"
+            android:layout_columnWeight="1"
+            />
+        <Button
+            style="@style/common_button"
+            android:id="@+id/btn_move_left"
+            android:text="@string/btn_text_move_left"
+            android:layout_columnWeight="1"
+            />
+        <ToggleButton
+            style="@style/common_button"
+            android:id="@+id/btn_toggle_take_off"
+            android:text="@string/btn_text_take_off"
+            android:textOff="@string/btn_text_take_off"
+            android:textOn="@string/btn_text_auto_landing"
+            android:layout_columnWeight="1"
+            />
+        <Button
+            style="@style/common_button"
+            android:id="@+id/btn_move_right"
+            android:text="@string/btn_text_move_right"
+            android:layout_columnWeight="1"
+            />
+        <Button
+            style="@style/common_button"
+            android:id="@+id/btn_move_backward"
+            android:text="@string/btn_text_move_backward"
+            android:layout_columnWeight="1"
+            />
+        <Button
+            style="@style/common_button"
+            android:id="@+id/btn_move_down"
+            android:text="@string/btn_text_move_down"
+            android:layout_columnWeight="1"
+            />
+        <Button
+            style="@style/common_button"
+            android:id="@+id/btn_turn_right"
+            android:text="@string/btn_text_turn_right"
+            android:layout_columnWeight="1"
+            />
+    </GridLayout>
+    <LinearLayout
+        android:id="@+id/action_toggles_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="4"
+        android:layout_alignParentBottom="true">
+
+        <ToggleButton
+            style="@style/common_button"
+            android:id="@+id/btn_toggle_advanced_flight_mode"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/btn_toggle_advanced_flight_mode_off"
+            android:textOff="@string/btn_toggle_advanced_flight_mode_off"
+            android:textOn="@string/btn_toggle_advanced_flight_mode_on"
+            />
+
+        <ToggleButton
+            style="@style/common_button"
+            android:id="@+id/btn_toggle_virtual_stick"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/btn_toggle_virtual_stick_off"
+            android:textOff="@string/btn_toggle_virtual_stick_off"
+            android:textOn="@string/btn_toggle_virtual_stick_on"
+            />
+
+        <ToggleButton
+            style="@style/common_button"
+            android:id="@+id/btn_toggle_simulator"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/btn_toggle_simulator_off"
+            android:textOff="@string/btn_toggle_simulator_off"
+            android:textOn="@string/btn_toggle_simulator_on"
+            />
+
+        <ToggleButton
+            style="@style/common_button"
+            android:id="@+id/btn_toggle_episode"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/btn_toggle_episode_start"
+            android:textOff="@string/btn_toggle_episode_start"
+            android:textOn="@string/btn_toggle_episode_stop"
+            />
+    </LinearLayout>
+</RelativeLayout>

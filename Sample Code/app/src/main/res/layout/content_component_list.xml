@@ -38,6 +38,14 @@
                 set:component_name="@string/component_mrl"
                 set:view_name="@string/view_button_controller"/>
 
+            <com.dji.sdk.sample.common.ListViewItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                set:list_item_name="@string/component_listview_episode_generator"
+                set:sub_Layout="@layout/content_main"
+                set:component_name="@string/component_mrl"
+                set:view_name="@string/view_episode_generator"/>
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
