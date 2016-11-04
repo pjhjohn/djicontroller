@@ -19,6 +19,7 @@
     <string name="component_listview_controller">Controller</string>
     <string name="component_listview_button_controller">ButtonController</string>
     <string name="component_listview_episode_generator">EpisodeGenerator</string>
+    <string name="component_listview_episode_player">EpisodePlayer</string>
     <string name="component_listview_component">Component</string>
     <string name="component_listview_camera">Camera</string>
     <string name="component_listview_gimbal">Gimbal</string>
@@ -162,6 +163,7 @@
     <string name="view_controller">ControllerView</string>
     <string name="view_button_controller">ButtonControllerView</string>
     <string name="view_episode_generator">EpisodeGeneratorView</string>
+    <string name="view_episode_player">EpisodePlayerView</string>
 
     <!-- View camera class name -->
     <string name="view_set_get_iso">SetGetISOView</string>
