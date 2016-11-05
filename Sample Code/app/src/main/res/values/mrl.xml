@@ -9,12 +9,12 @@
     <string name="btn_toggle_episode_stop">Stop Current Episode</string>
 
     <string name="btn_text_take_off">Take Off</string>
-    <string name="btn_text_auto_landing">Auto Landing</string>
+    <string name="btn_text_auto_landing">Landing</string>
     <string name="btn_custom_action1_text">Custom Action 1</string>
     <string name="btn_custom_action2_text">Custom Action 2</string>
 
-    <string name="actions_header_text">Available Actions</string>
-    <string name="simulator_header_text">Simulator Logger</string>
+    <string name="header_text_actions">Available Actions</string>
+    <string name="header_text_simulator">Simulator Logger</string>
 
     <string name="advanced_flight_mode_on">Enabled Advanced Flight Mode</string>
     <string name="advanced_flight_mode_off">Disabled Advanced Flight Mode</string>
@@ -27,4 +27,10 @@
     <string name="btn_text_move_backward">move backward</string>
     <string name="btn_text_turn_left">turn left</string>
     <string name="btn_text_turn_right">turn right</string>
+
+    <!-- Episode Player -->
+    <string name="btn_text_initialize_flight_config">Initialize Config</string>
+    <string name="btn_text_finalize_flight_config">Finalize Config</string>
+    <string name="header_text_episodes">Episode List</string>
+
 </resources>

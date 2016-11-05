@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:textStyle="bold"
-        android:text="@string/simulator_header_text"
+        android:text="@string/header_text_simulator"
         />
 
     <!--Logger Space-->
@@ -41,7 +41,7 @@
         android:layout_height="wrap_content"
         android:layout_above="@+id/action_toggles_container"
         android:textStyle="bold"
-        android:text="@string/actions_header_text"
+        android:text="@string/header_text_actions"
         />
 
     <LinearLayout

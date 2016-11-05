@@ -9,11 +9,12 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.ToggleButton;
+import android.widget.Toast;
 
 import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.common.DJISampleApplication;
 import com.dji.sdk.sample.common.Utils;
+import com.dji.sdk.sample.mrl.network.api.Api;
 import com.dji.sdk.sample.mrl.network.model.Episode;
 import com.dji.sdk.sample.utils.DJIModuleVerificationUtil;
 
@@ -28,93 +29,82 @@ import dji.common.flightcontroller.DJIVirtualStickRollPitchControlMode;
 import dji.common.flightcontroller.DJIVirtualStickVerticalControlMode;
 import dji.common.flightcontroller.DJIVirtualStickYawControlMode;
 import dji.sdk.flightcontroller.DJIFlightController;
+import dji.thirdparty.retrofit2.Call;
+import dji.thirdparty.retrofit2.Callback;
+import dji.thirdparty.retrofit2.Response;
 import dji.thirdparty.rx.functions.Action1;
-import timber.log.Timber;
 
 public class EpisodePlayerView extends RelativeLayout {
 
-    private final double SIMULATOR_INITIAL_LATITUDE = 20;
-    private final double SIMULATOR_INITIAL_LONGITUDE = 20;
-    private final int SIMULATION_UPDATE_FREQUENCY = 10;
-    private final int SIMULATOR_INITIAL_NUM_OF_SATELLITES = 10;
+    private final double SIMULATOR_LATITUDE = 20;
+    private final double SIMULATOR_LONGITUDE = 20;
+    private final int SIMULATOR_STATE_UPDATE_FREQUENCY = 10;
+    private final int SIMULATOR_NUM_OF_SATELLITES = 10;
 
-    @BindView(R.id.logger_textlist) protected ListView mListLogger;
-
-    @BindView(R.id.btn_toggle_take_off) protected ToggleButton mToggleTakeOff;
-    @BindView(R.id.btn_move_up) protected Button mBtnMoveUp;
-    @BindView(R.id.btn_move_down) protected Button mBtnMoveDown;
-    @BindView(R.id.btn_move_left) protected Button mBtnMoveLeft;
-    @BindView(R.id.btn_move_right) protected Button mBtnMoveRight;
-    @BindView(R.id.btn_move_forward) protected Button mBtnMoveForward;
-    @BindView(R.id.btn_move_backward) protected Button mBtnMoveBackward;
-    @BindView(R.id.btn_turn_left) protected Button mBtnTurnLeft;
-    @BindView(R.id.btn_turn_right) protected Button mBtnTurnRight;
-
-    @BindView(R.id.btn_toggle_advanced_flight_mode) protected ToggleButton mToggleAdvFlightMode;
-    @BindView(R.id.btn_toggle_virtual_stick) protected ToggleButton mToggleVirtualStick;
-    @BindView(R.id.btn_toggle_episode) protected ToggleButton mToggleEpisode;
-    @BindView(R.id.btn_toggle_simulator) protected ToggleButton mToggleSimulator;
+    @BindView(R.id.episode_list) protected ListView mEpisodeList;
+    @BindView(R.id.btn_initialize_flight_config) protected Button mButtonConfigInitializer;
+    @BindView(R.id.btn_finalize_flight_config) protected Button mButtonConfigFinalizer;
+    @BindView(R.id.btn_take_off) protected Button mButtonTakeOff;
+    @BindView(R.id.btn_auto_landing) protected Button mButtonAutoLanding;
 
     private Unbinder mUnbinder;
+    private ArrayList<Episode> mEpisodes;
+    private ArrayAdapter<Episode> mEpisodeAdapter;
 
-    private ArrayList<String> mLog;
-    private ArrayAdapter<String> mAdapter;
-    private Episode mEpisode;
-
+    /* Initializers */
     public EpisodePlayerView(Context context, AttributeSet attrs) {
         super(context, attrs);
         initUI(context, attrs);
     }
-
-    @Override
-    protected void onAttachedToWindow() {
+    @Override protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         this.setControlMode();
     }
-
-    @Override
-    protected void onDetachedFromWindow() {
+    @Override protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         this.restoreOldControlMode();
         mUnbinder.unbind();
     }
 
+
+    /* ControlMode */
+    private boolean mPrevVirtualStickAdvancedModeEnabled;
     private DJIVirtualStickYawControlMode mPrevYawControlMode;
     private DJIVirtualStickRollPitchControlMode mPrevRollPitchControlMode;
     private DJIVirtualStickVerticalControlMode mPrevVerticalControlMode;
     private DJIVirtualStickFlightCoordinateSystem mPrevFlightCoordinateSystem;
     private void setControlMode() {
         // Check FlightController Accessibility
-        if (DJISampleApplication.getAircraftInstance() == null || DJISampleApplication.getAircraftInstance().getFlightController() == null) return;
+        if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
         DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
+
+        // VirtualStickAdvancedModeEnabled
+        mPrevVirtualStickAdvancedModeEnabled = controller.getVirtualStickAdvancedModeEnabled();
+        controller.setVirtualStickAdvancedModeEnabled(true);
 
         // HorizontalFlightCoordinateSystem : Body by default
         mPrevFlightCoordinateSystem = controller.getHorizontalCoordinateSystem();
         controller.setHorizontalCoordinateSystem(DJIVirtualStickFlightCoordinateSystem.Body);
-        this.log2ListLogger("FlightCoordinateSystem : %s => %s", mPrevFlightCoordinateSystem.name(), controller.getHorizontalCoordinateSystem().name());
 
         // YawControlMode : AngularVelocity (Palstance) by default
         mPrevYawControlMode = controller.getYawControlMode();
         controller.setYawControlMode(DJIVirtualStickYawControlMode.AngularVelocity);
-        this.log2ListLogger("YawControlMode : %s => %s", mPrevYawControlMode.name(), controller.getYawControlMode().name());
 
         // RollPitchControlMode : Angle by default
         mPrevRollPitchControlMode = controller.getRollPitchControlMode();
         controller.setRollPitchControlMode(DJIVirtualStickRollPitchControlMode.Velocity);
-        this.log2ListLogger("RollPitchControlMode : %s => %s", mPrevRollPitchControlMode.name(), controller.getRollPitchControlMode().name());
 
         // VerticalControlMode : Velocity by default
         mPrevVerticalControlMode = controller.getVerticalControlMode();
         controller.setVerticalControlMode(DJIVirtualStickVerticalControlMode.Velocity);
-        this.log2ListLogger("VerticalControlMode : %s => %s", mPrevVerticalControlMode.name(), controller.getVerticalControlMode().name());
     }
-
     private void restoreOldControlMode() {
         // Check FlightController Accessibility
-        if (DJISampleApplication.getAircraftInstance() == null || DJISampleApplication.getAircraftInstance().getFlightController() == null) return;
+        if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
         DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
 
         // Restore old control modes
+        controller.setVirtualStickAdvancedModeEnabled(mPrevVirtualStickAdvancedModeEnabled);
         controller.setHorizontalCoordinateSystem(mPrevFlightCoordinateSystem);
         controller.setYawControlMode(mPrevYawControlMode);
         controller.setRollPitchControlMode(mPrevRollPitchControlMode);
@@ -127,110 +117,77 @@ public class EpisodePlayerView extends RelativeLayout {
         addView(content, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         mUnbinder = ButterKnife.bind(this, content);
 
-        /* Initialize Loggers */
-        mLog = new ArrayList<>();
-        mAdapter = new ArrayAdapter<>(this.getContext(), R.layout.list_logger_item, android.R.id.text1, mLog);
-        mListLogger.setAdapter(mAdapter);
-
-        mToggleAdvFlightMode.setOnCheckedChangeListener((buttonView, checked) -> {
-            if (this.isFlightControllerNotAvailiable()) return;
-            if (checked) {
-                DJISampleApplication.getAircraftInstance().getFlightController().setVirtualStickAdvancedModeEnabled(true);
-                this.log2ListLogger(R.string.advanced_flight_mode_on);
-            } else {
-                DJISampleApplication.getAircraftInstance().getFlightController().setVirtualStickAdvancedModeEnabled(false);
-                this.log2ListLogger(R.string.advanced_flight_mode_off);
-            }
-
+        /* Initialize Episode List */
+        mEpisodes = new ArrayList<>();
+        mEpisodeAdapter = new ArrayAdapter<>(this.getContext(), R.layout.list_logger_item, android.R.id.text1, mEpisodes); // TODO : new layout to inflace with Episode
+        mEpisodeList.setAdapter(mEpisodeAdapter);
+        mEpisodeList.setOnItemClickListener((parent, view, position, id) -> {
+            mEpisodes.get(position).getEpisodeObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
         });
 
-        mToggleVirtualStick.setOnCheckedChangeListener((buttonView, checked) -> {
-            if (this.isFlightControllerNotAvailiable()) return;
-            if (checked) {
-                DJISampleApplication.getAircraftInstance().getFlightController().enableVirtualStickControlMode(
-                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
-                );
-            } else {
-                DJISampleApplication.getAircraftInstance().getFlightController().disableVirtualStickControlMode(
-                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
-                );
+        /* Fetch Episode Data */
+        Call<ArrayList<Episode>> call = Api.database().getEpisodes();
+        call.enqueue(new Callback<ArrayList<Episode>>() {
+            @Override
+            public void onResponse(Call<ArrayList<Episode>> call, Response<ArrayList<Episode>> response) {
+                mEpisodeAdapter.clear();
+                mEpisodeAdapter.addAll(response.body());
+                mEpisodeAdapter.notifyDataSetChanged();
+                Toast.makeText(EpisodePlayerView.this.getContext(), response.body().size(), Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Call<ArrayList<Episode>> call, Throwable throwable) {
+                Toast.makeText(EpisodePlayerView.this.getContext(), "call failed : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
 
-        mToggleSimulator.setOnCheckedChangeListener((buttonView, checked) -> {
-            if (checked) {
-                DJISampleApplication.getAircraftInstance().getFlightController().getSimulator().startSimulator(
-                    new DJISimulatorInitializationData(
-                        SIMULATOR_INITIAL_LATITUDE,
-                        SIMULATOR_INITIAL_LONGITUDE,
-                        SIMULATION_UPDATE_FREQUENCY,
-                        SIMULATOR_INITIAL_NUM_OF_SATELLITES
-                    ),
-                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
-                );
-            } else {
-                DJISampleApplication.getAircraftInstance().getFlightController().getSimulator().stopSimulator(
-                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
-                );
-            }
+        mButtonConfigInitializer.setOnClickListener(unused -> {
+            // Check FlightController Accessibility
+            if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
+            DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
+
+            controller.enableVirtualStickControlMode(djiError -> Utils.showDialogBasedOnError(getContext(), djiError));
+            controller.getSimulator().startSimulator(
+                new DJISimulatorInitializationData(SIMULATOR_LATITUDE, SIMULATOR_LONGITUDE, SIMULATOR_STATE_UPDATE_FREQUENCY, SIMULATOR_NUM_OF_SATELLITES),
+                djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
+            );
         });
 
-        mToggleEpisode.setOnCheckedChangeListener((buttonView, checked) -> {
-            if (this.isFlightControllerNotAvailiable()) return;
-            if (checked) mEpisode = new Episode();
-            else mEpisode.getEpisodeObservable().subscribe(this.sendVirtualStickCommand);
+        mButtonConfigFinalizer.setOnClickListener(unused -> {
+            // Check FlightController Accessibility
+            if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
+            DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
+
+            controller.disableVirtualStickControlMode(djiError -> Utils.showDialogBasedOnError(getContext(), djiError));
+            controller.getSimulator().stopSimulator(djiError -> Utils.showDialogBasedOnError(getContext(), djiError));
         });
 
-        mToggleTakeOff.setOnCheckedChangeListener((buttonView, checked) -> {
-            if (this.isFlightControllerNotAvailiable()) return;
-            if (checked) {
-                DJISampleApplication.getAircraftInstance().getFlightController().takeOff(
-                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
-                );
-            } else {
-                DJISampleApplication.getAircraftInstance().getFlightController().autoLanding(
-                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
-                );
-            }
+        mButtonTakeOff.setOnClickListener(unused -> {
+            // Check FlightController Accessibility
+            if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
+            DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
+
+            controller.takeOff(djiError -> Utils.showDialogBasedOnError(getContext(), djiError));
         });
 
-        /* Add Command to Episode */
-        mBtnMoveForward.setOnClickListener  (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.FORWARD)));
-        mBtnMoveBackward.setOnClickListener (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.BACKWARD)));
-        mBtnMoveLeft.setOnClickListener     (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.LEFT)));
-        mBtnMoveRight.setOnClickListener    (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.RIGHT)));
-        mBtnMoveUp.setOnClickListener       (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.UP)));
-        mBtnMoveDown.setOnClickListener     (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.DOWN)));
-        mBtnTurnLeft.setOnClickListener     (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.CCW)));
-        mBtnTurnRight.setOnClickListener    (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.CW)));
+        mButtonAutoLanding.setOnClickListener(unused -> {
+            // Check FlightController Accessibility
+            if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
+            DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
+
+            controller.autoLanding(djiError -> Utils.showDialogBasedOnError(getContext(), djiError));
+        });
     }
 
     private Action1<VirtualStickCommand> sendVirtualStickCommand = (cmd) -> {
-        if (EpisodePlayerView.this.isFlightControllerNotAvailiable()) return;
-        EpisodePlayerView.this.log2ListLogger(cmd.toString()); // Yaw, Pitch, Roll, Throttle
-        DJISampleApplication.getAircraftInstance().getFlightController().sendVirtualStickFlightControlData(
+        // Check FlightController Accessibility
+        if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
+        DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
+
+        controller.sendVirtualStickFlightControlData(
             cmd.toDJIVirtualStickFlightControlData(),
-            djiError -> {}
+            djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
         );
     };
-
-    /* Priavte Methods */
-    private boolean isFlightControllerNotAvailiable() {
-        final boolean availiable = DJIModuleVerificationUtil.isFlightControllerAvailable();
-        if (!availiable) this.log2ListLogger("FlightController Not Availiable");
-        return !availiable;
-    }
-
-    /* Loggers */
-    private void log2ListLogger(String format, Object ...args) {
-        log2ListLogger(String.format(format, args));
-    }
-    private void log2ListLogger(int resid) {
-        log2ListLogger(this.getContext().getResources().getString(resid));
-    }
-    private void log2ListLogger(String log) {
-        Timber.d(log);
-        mLog.add(0, log);
-        mAdapter.notifyDataSetChanged();
-    }
 }
