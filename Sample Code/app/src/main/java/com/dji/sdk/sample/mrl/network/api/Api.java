@@ -1,5 +1,8 @@
 package com.dji.sdk.sample.mrl.network.api;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import dji.thirdparty.retrofit2.Retrofit;
 import dji.thirdparty.retrofit2.converter.gson.GsonConverterFactory;
 
@@ -22,9 +25,12 @@ public class Api {
     /* Only triggered at first */
     public static synchronized void createInstance() {
         if(Api.instance != null) return;
+
+        Gson gson = new GsonBuilder().setLenient().create();
+
         Api.instance = new Api(new Retrofit.Builder()
             .baseUrl("https://djicontroller-server-pjhjohn.c9users.io/")
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
 //            .addCallAdapterFactory(RxJavaCallAdapterFactory.create()) //Rxandroid를 사용하기 위해 추가(옵션)
             .build()
             .create(EpisodeDatabase.class)
