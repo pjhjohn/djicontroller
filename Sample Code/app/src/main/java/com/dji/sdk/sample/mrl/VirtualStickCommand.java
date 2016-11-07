@@ -15,8 +15,7 @@ public class VirtualStickCommand {
     public static float MAX_SPEED_THROTTLE = DJIFlightControllerDataType.DJIVirtualStickVerticalControlMaxVelocity;
     public static float MAX_SPEED_YAW = DJIFlightControllerDataType.DJIVirtualStickYawControlMaxAngularVelocity;
 
-    private int index;
-    private float pitch, roll, yaw, throttle;
+    private float roll, pitch, throttle, yaw;
 
     public enum Direction {
         FORWARD, BACKWARD, UP, DOWN, LEFT, RIGHT, CW, CCW
@@ -33,33 +32,20 @@ public class VirtualStickCommand {
             case CW       : yaw      =  0.5f; break;
             case UP       : throttle =  1.0f; break;
             case DOWN     : throttle =  0.0f; break;
-        } this.set(0, pitch, roll, yaw, throttle);
+        } this.set(pitch, roll, yaw, throttle);
     }
     public VirtualStickCommand() {
-        this.set(0, 0, 0, 0, 0);
+        this.set(0, 0, 0, 0);
     }
-    public VirtualStickCommand(int index) {
-        this.set(index, 0, 0, 0, 0);
-    }
-    public VirtualStickCommand(int index, float pitch, float roll, float yaw, float throttle) {
-        this.set(index, pitch, roll, yaw, throttle);
+    public VirtualStickCommand(float pitch, float roll, float yaw, float throttle) {
+        this.set(pitch, roll, yaw, throttle);
     }
 
-    private void set(int index, float pitch, float roll, float yaw, float throttle) {
-        this.setIndex(index);
+    private void set(float pitch, float roll, float yaw, float throttle) {
         this.setPitch(pitch);
         this.setRoll(roll);
         this.setYaw(yaw);
         this.setThrottle(throttle);
-    }
-
-    public int getIndex() {
-        return index;
-    }
-
-    public VirtualStickCommand setIndex(int index) {
-        this.index = index;
-        return this;
     }
 
     public float getPitch() {
@@ -105,14 +91,11 @@ public class VirtualStickCommand {
 
     @Override
     public String toString() {
-        return String.format("CMD#%d : [ %4f | %4f | %4f | %4f ]",
-            this.getIndex(), this.getYaw(), this.getPitch(), this.getRoll(), this.getThrottle()
-        ); // Index, Yaw, Pitch, Roll, Throttle
+        return String.format("CMD#%d : [ %4f | %4f | %4f | %4f ]", this.getRoll(), this.getPitch(), this.getThrottle(), this.getYaw()); // Roll, Pitch, Throttle, Yaw
     }
 
     public Command toEpisodeCommand() {
         Command command = new Command();
-        command.index = this.getIndex();
         command.yaw = this.getYaw();
         command.pitch = this.getPitch();
         command.roll = this.getRoll();

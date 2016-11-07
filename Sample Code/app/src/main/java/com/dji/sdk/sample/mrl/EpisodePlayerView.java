@@ -122,7 +122,7 @@ public class EpisodePlayerView extends RelativeLayout {
         mEpisodeAdapter = new ArrayAdapter<>(this.getContext(), R.layout.list_logger_item, android.R.id.text1, mEpisodes); // TODO : new layout to inflace with Episode
         mEpisodeList.setAdapter(mEpisodeAdapter);
         mEpisodeList.setOnItemClickListener((parent, view, position, id) -> {
-            mEpisodes.get(position).getEpisodeObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
+            mEpisodes.get(position).getVirtualStickCommandsObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
         });
 
         /* Fetch Episode Data */

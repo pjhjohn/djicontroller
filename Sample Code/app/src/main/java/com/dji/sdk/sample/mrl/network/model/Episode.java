@@ -2,7 +2,7 @@ package com.dji.sdk.sample.mrl.network.model;
 
 import com.dji.sdk.sample.mrl.VirtualStickCommand;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import dji.thirdparty.rx.Observable;
@@ -16,28 +16,18 @@ import dji.thirdparty.rx.schedulers.Schedulers;
 public class Episode {
     public Integer id;
     public String name;
-    public ArrayList<Command> commands;
-    public ArrayList<VirtualStickCommand> virtualStickCommands;
+    public Integer timestep;
+    public List<ControlPoint> control_points;
+    public List<State> states;
+    public List<DiffState> diff_states;
+    public List<Command> commands;
+    public String created_at;
+    public String updated_at;
 
-    public Episode() {
-        this("");
-    }
-    public Episode(String name) {
-        this.name = name;
-        this.virtualStickCommands = new ArrayList<>();
-        this.commands = new ArrayList<>();
-    }
-
-    public Episode push(VirtualStickCommand virtualStickCommand) {
-        int index = this.virtualStickCommands.size();
-        this.virtualStickCommands.add(virtualStickCommand.setIndex(index));
-        this.commands.add(virtualStickCommand.setIndex(index).toEpisodeCommand());
-        return this;
-    }
-
-    public Observable<VirtualStickCommand> getEpisodeObservable() {
-        return Observable.from(this.virtualStickCommands)
+    public Observable<VirtualStickCommand> getVirtualStickCommandsObservable() {
+        return Observable.from(this.commands)
             .concatMap(command -> Observable.just(command).delay(200, TimeUnit.MILLISECONDS))
+            .map(command -> new VirtualStickCommand(command.pitch, command.roll, command.yaw, command.throttle))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread());
     }

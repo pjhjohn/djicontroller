@@ -178,7 +178,7 @@ public class EpisodeGeneratorView extends RelativeLayout {
         mToggleEpisode.setOnCheckedChangeListener((buttonView, checked) -> {
             if (this.isFlightControllerNotAvailiable()) return;
             if (checked) mEpisode = new Episode();
-            else mEpisode.getEpisodeObservable().subscribe(this.sendVirtualStickCommand);
+            else mEpisode.getVirtualStickCommandsObservable().subscribe(this.sendVirtualStickCommand);
         });
 
         mToggleTakeOff.setOnCheckedChangeListener((buttonView, checked) -> {
@@ -195,14 +195,14 @@ public class EpisodeGeneratorView extends RelativeLayout {
         });
 
         /* Add Command to Episode */
-        mBtnMoveForward.setOnClickListener  (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.FORWARD)));
-        mBtnMoveBackward.setOnClickListener (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.BACKWARD)));
-        mBtnMoveLeft.setOnClickListener     (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.LEFT)));
-        mBtnMoveRight.setOnClickListener    (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.RIGHT)));
-        mBtnMoveUp.setOnClickListener       (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.UP)));
-        mBtnMoveDown.setOnClickListener     (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.DOWN)));
-        mBtnTurnLeft.setOnClickListener     (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.CCW)));
-        mBtnTurnRight.setOnClickListener    (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.CW)));
+//        mBtnMoveForward.setOnClickListener  (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.FORWARD)));
+//        mBtnMoveBackward.setOnClickListener (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.BACKWARD)));
+//        mBtnMoveLeft.setOnClickListener     (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.LEFT)));
+//        mBtnMoveRight.setOnClickListener    (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.RIGHT)));
+//        mBtnMoveUp.setOnClickListener       (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.UP)));
+//        mBtnMoveDown.setOnClickListener     (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.DOWN)));
+//        mBtnTurnLeft.setOnClickListener     (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.CCW)));
+//        mBtnTurnRight.setOnClickListener    (v -> mEpisode.push(new VirtualStickCommand(VirtualStickCommand.Direction.CW)));
     }
 
     private Action1<VirtualStickCommand> sendVirtualStickCommand = (cmd) -> {

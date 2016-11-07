@@ -67,7 +67,7 @@ public class ButtonControllerView extends RelativeLayout {
     private Observable<VirtualStickCommand> getDummyObservable(float pitch, float roll, float yaw, float throttle) {
         return Observable.from(CMD_INDEXES)
             .concatMap( val -> Observable.just(val).delay(200, TimeUnit.MILLISECONDS))
-            .map(index -> new VirtualStickCommand(index, pitch, roll, yaw, throttle))
+            .map(index -> new VirtualStickCommand(pitch, roll, yaw, throttle))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread());
     }
