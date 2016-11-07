@@ -5,7 +5,6 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -49,7 +48,7 @@ public class EpisodePlayerView extends RelativeLayout {
 
     private Unbinder mUnbinder;
     private ArrayList<Episode> mEpisodes;
-    private ArrayAdapter<Episode> mEpisodeAdapter;
+    private EpisodeAdapter mEpisodeAdapter;
 
     /* Initializers */
     public EpisodePlayerView(Context context, AttributeSet attrs) {
@@ -119,7 +118,7 @@ public class EpisodePlayerView extends RelativeLayout {
 
         /* Initialize Episode List */
         mEpisodes = new ArrayList<>();
-        mEpisodeAdapter = new ArrayAdapter<>(this.getContext(), R.layout.list_logger_item, android.R.id.text1, mEpisodes); // TODO : new layout to inflace with Episode
+        mEpisodeAdapter = new EpisodeAdapter();
         mEpisodeList.setAdapter(mEpisodeAdapter);
         mEpisodeList.setOnItemClickListener((parent, view, position, id) -> {
             mEpisodes.get(position).getVirtualStickCommandsObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
@@ -133,12 +132,13 @@ public class EpisodePlayerView extends RelativeLayout {
                 mEpisodeAdapter.clear();
                 mEpisodeAdapter.addAll(response.body());
                 mEpisodeAdapter.notifyDataSetChanged();
-                Toast.makeText(EpisodePlayerView.this.getContext(), response.body().size(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, String.format("Successfully loaded %d episodes", response.body().size()), Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onFailure(Call<ArrayList<Episode>> call, Throwable throwable) {
-                Toast.makeText(EpisodePlayerView.this.getContext(), "call failed : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                throwable.printStackTrace();
+                Toast.makeText(context, "Failed to load episodes : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
 

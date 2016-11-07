@@ -15,12 +15,9 @@ import dji.thirdparty.retrofit2.http.Path;
  * Created by pjhjohn on 2015-10-28.
  */
 public interface EpisodeDatabase {
-    @POST("episodes")
-    Call<Void> createEpisode(@Body Episode episode);
-
-    @GET("episodes")
+    @GET("episodes.json")
     Call<ArrayList<Episode>> getEpisodes();
 
-    @GET("episodes/{id}")
+    @GET("episodes/{id}.json")
     Call<ArrayList<Episode>> getEpisode(@Path("id") Integer id);
 }
