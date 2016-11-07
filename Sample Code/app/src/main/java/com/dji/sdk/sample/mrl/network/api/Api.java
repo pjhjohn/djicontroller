@@ -23,7 +23,7 @@ public class Api {
     public static synchronized void createInstance() {
         if(Api.instance != null) return;
         Api.instance = new Api(new Retrofit.Builder()
-            .baseUrl("https://phantom4-command-logger-pjhjohn.c9users.io/")
+            .baseUrl("https://djicontroller-server-pjhjohn.c9users.io/")
             .addConverterFactory(GsonConverterFactory.create())
 //            .addCallAdapterFactory(RxJavaCallAdapterFactory.create()) //Rxandroid를 사용하기 위해 추가(옵션)
             .build()
