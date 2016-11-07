@@ -129,10 +129,13 @@ public class EpisodePlayerView extends RelativeLayout {
         call.enqueue(new Callback<ArrayList<Episode>>() {
             @Override
             public void onResponse(Call<ArrayList<Episode>> call, Response<ArrayList<Episode>> response) {
+                ArrayList<Episode> episodes = response.body();
+                mEpisodes.clear();
+                mEpisodes.addAll(episodes);
                 mEpisodeAdapter.clear();
-                mEpisodeAdapter.addAll(response.body());
+                mEpisodeAdapter.addAll(episodes);
                 mEpisodeAdapter.notifyDataSetChanged();
-                Toast.makeText(context, String.format("Successfully loaded %d episodes", response.body().size()), Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, String.format("Successfully loaded %d episodes", episodes.size()), Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -185,9 +188,6 @@ public class EpisodePlayerView extends RelativeLayout {
         if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
         DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
 
-        controller.sendVirtualStickFlightControlData(
-            cmd.toDJIVirtualStickFlightControlData(),
-            djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
-        );
+        controller.sendVirtualStickFlightControlData(cmd.toDJIVirtualStickFlightControlData(), djiError -> {});
     };
 }

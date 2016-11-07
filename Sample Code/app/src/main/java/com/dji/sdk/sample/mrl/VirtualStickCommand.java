@@ -94,15 +94,6 @@ public class VirtualStickCommand {
         return String.format("CMD#%d : [ %4f | %4f | %4f | %4f ]", this.getRoll(), this.getPitch(), this.getThrottle(), this.getYaw()); // Roll, Pitch, Throttle, Yaw
     }
 
-    public Command toEpisodeCommand() {
-        Command command = new Command();
-        command.yaw = this.getYaw();
-        command.pitch = this.getPitch();
-        command.roll = this.getRoll();
-        command.throttle = this.getThrottle();
-        return command;
-    }
-
     public DJIVirtualStickFlightControlData toDJIVirtualStickFlightControlData() {
         return new DJIVirtualStickFlightControlData(this.getPitch(), this.getRoll(), this.getYaw(), this.getThrottle());
     }

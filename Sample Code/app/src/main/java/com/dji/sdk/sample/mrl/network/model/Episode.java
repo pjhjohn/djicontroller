@@ -24,9 +24,13 @@ public class Episode {
     public String created_at;
     public String updated_at;
 
+    public Episode() {
+        this.timestep = 200; // For backward compatibility
+    }
+
     public Observable<VirtualStickCommand> getVirtualStickCommandsObservable() {
         return Observable.from(this.commands)
-            .concatMap(command -> Observable.just(command).delay(200, TimeUnit.MILLISECONDS))
+            .concatMap(command -> Observable.just(command).delay(this.timestep, TimeUnit.MILLISECONDS))
             .map(command -> new VirtualStickCommand(command.pitch, command.roll, command.yaw, command.throttle))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread());
