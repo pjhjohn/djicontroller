@@ -15,9 +15,11 @@ import com.dji.sdk.sample.common.DJISampleApplication;
 import com.dji.sdk.sample.common.Utils;
 import com.dji.sdk.sample.mrl.network.api.Api;
 import com.dji.sdk.sample.mrl.network.model.Episode;
+import com.dji.sdk.sample.mrl.network.model.SimulatorLog;
 import com.dji.sdk.sample.utils.DJIModuleVerificationUtil;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -31,13 +33,17 @@ import dji.sdk.flightcontroller.DJIFlightController;
 import dji.thirdparty.retrofit2.Call;
 import dji.thirdparty.retrofit2.Callback;
 import dji.thirdparty.retrofit2.Response;
+import dji.thirdparty.rx.Observable;
+import dji.thirdparty.rx.android.schedulers.AndroidSchedulers;
 import dji.thirdparty.rx.functions.Action1;
+import dji.thirdparty.rx.schedulers.Schedulers;
+import timber.log.Timber;
 
 public class EpisodePlayerView extends RelativeLayout {
 
     private final double SIMULATOR_LATITUDE = 20;
     private final double SIMULATOR_LONGITUDE = 20;
-    private final int SIMULATOR_STATE_UPDATE_FREQUENCY = 10;
+    private final int SIMULATOR_STATE_UPDATE_FREQUENCY = 50; // in HZ with range [2, 150]
     private final int SIMULATOR_NUM_OF_SATELLITES = 10;
 
     @BindView(R.id.episode_list) protected ListView mEpisodeList;
@@ -49,6 +55,7 @@ public class EpisodePlayerView extends RelativeLayout {
     private Unbinder mUnbinder;
     private ArrayList<Episode> mEpisodes;
     private EpisodeAdapter mEpisodeAdapter;
+    private SimulatorLog mSimulatorLog;
 
     /* Initializers */
     public EpisodePlayerView(Context context, AttributeSet attrs) {
@@ -116,12 +123,45 @@ public class EpisodePlayerView extends RelativeLayout {
         addView(content, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         mUnbinder = ButterKnife.bind(this, content);
 
+        /* Initialize Simulator Callback */
+        mSimulatorLog = new SimulatorLog();
+        DJISampleApplication.getAircraftInstance().getFlightController().getSimulator().setUpdatedSimulatorStateDataCallback(
+            djiSimulatorStateData -> mSimulatorLog.add(djiSimulatorStateData)
+        );
+
         /* Initialize Episode List */
         mEpisodes = new ArrayList<>();
         mEpisodeAdapter = new EpisodeAdapter();
         mEpisodeList.setAdapter(mEpisodeAdapter);
         mEpisodeList.setOnItemClickListener((parent, view, position, id) -> {
-            mEpisodes.get(position).getVirtualStickCommandsObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
+            // Get target episode
+            Episode episode = mEpisodes.get(position);
+
+            // Pass command sequence to execute
+            episode.getVirtualStickCommandsObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
+
+            // Last command's t + alpha time
+            mSimulatorLog.startRecording();
+            Observable.just(episode.id)
+                .delay((long) (episode.commands.get(episode.commands.size() - 1).t + 1000), TimeUnit.MILLISECONDS)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(episodeId -> {
+                    mSimulatorLog.stopRecording();
+                    Call<Void> call = Api.database().postSimulatorLog(episodeId, mSimulatorLog);
+                    call.enqueue(new Callback<Void>() {
+                        @Override
+                        public void onResponse(Call<Void> call, Response<Void> response) {
+                            Toast.makeText(context, String.format("Successfully loaded %d simulator logs", mSimulatorLog.events.size()), Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onFailure(Call<Void> call, Throwable throwable) {
+                            throwable.printStackTrace();
+                            Toast.makeText(context, "Failed to post simulator log : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                });
         });
 
         /* Fetch Episode Data */
@@ -171,7 +211,7 @@ public class EpisodePlayerView extends RelativeLayout {
             if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
             DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
 
-            controller.takeOff(djiError -> Utils.showDialogBasedOnError(getContext(), djiError));
+            controller.takeOff(djiError -> {}); // Ignore status feedback
         });
 
         mButtonAutoLanding.setOnClickListener(unused -> {
@@ -179,7 +219,7 @@ public class EpisodePlayerView extends RelativeLayout {
             if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
             DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
 
-            controller.autoLanding(djiError -> Utils.showDialogBasedOnError(getContext(), djiError));
+            controller.autoLanding(djiError -> {}); // Ignore status feedback
         });
     }
 
@@ -188,6 +228,6 @@ public class EpisodePlayerView extends RelativeLayout {
         if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
         DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
 
-        controller.sendVirtualStickFlightControlData(cmd.toDJIVirtualStickFlightControlData(), djiError -> {});
+        controller.sendVirtualStickFlightControlData(cmd.toDJIVirtualStickFlightControlData(), djiError -> {}); // Ignore status feedback
     };
 }

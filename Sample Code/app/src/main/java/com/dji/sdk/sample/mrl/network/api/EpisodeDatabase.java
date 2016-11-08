@@ -2,6 +2,7 @@ package com.dji.sdk.sample.mrl.network.api;
 
 
 import com.dji.sdk.sample.mrl.network.model.Episode;
+import com.dji.sdk.sample.mrl.network.model.SimulatorLog;
 
 import java.util.ArrayList;
 
@@ -20,4 +21,7 @@ public interface EpisodeDatabase {
 
     @GET("episodes/{id}.json")
     Call<ArrayList<Episode>> getEpisode(@Path("id") Integer id);
+
+    @POST("episodes/{id}/update_simulator_log.json")
+    Call<Void> postSimulatorLog(@Path("id") Integer id, @Body SimulatorLog simulatorLog);
 }
