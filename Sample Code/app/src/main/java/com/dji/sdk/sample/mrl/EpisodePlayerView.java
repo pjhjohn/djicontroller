@@ -1,6 +1,7 @@
 package com.dji.sdk.sample.mrl;
 
 import android.content.Context;
+import android.text.InputType;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.common.DJISampleApplication;
 import com.dji.sdk.sample.common.Utils;
@@ -37,7 +39,6 @@ import dji.thirdparty.rx.Observable;
 import dji.thirdparty.rx.android.schedulers.AndroidSchedulers;
 import dji.thirdparty.rx.functions.Action1;
 import dji.thirdparty.rx.schedulers.Schedulers;
-import timber.log.Timber;
 
 public class EpisodePlayerView extends RelativeLayout {
 
@@ -152,7 +153,7 @@ public class EpisodePlayerView extends RelativeLayout {
                     call.enqueue(new Callback<Void>() {
                         @Override
                         public void onResponse(Call<Void> call, Response<Void> response) {
-                            Toast.makeText(context, String.format("Successfully loaded %d simulator logs", mSimulatorLog.events.size()), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, String.format("Successfully posted %d simulator events", mSimulatorLog.events.size()), Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
@@ -186,15 +187,21 @@ public class EpisodePlayerView extends RelativeLayout {
         });
 
         mButtonConfigInitializer.setOnClickListener(unused -> {
-            // Check FlightController Accessibility
-            if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
-            DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
+            new MaterialDialog.Builder(context)
+                .title("SimulatorStateUpdateFrequency")
+                .content("Update Frequency in Hz with range [2, 150]")
+                .inputType(InputType.TYPE_NUMBER_FLAG_DECIMAL)
+                .input("Hz with range [2, 150]", String.format("%d", SIMULATOR_STATE_UPDATE_FREQUENCY), (dialog, input) -> {
+                    // Check FlightController Accessibility
+                    if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
+                    DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
 
-            controller.enableVirtualStickControlMode(djiError -> Utils.showDialogBasedOnError(getContext(), djiError));
-            controller.getSimulator().startSimulator(
-                new DJISimulatorInitializationData(SIMULATOR_LATITUDE, SIMULATOR_LONGITUDE, SIMULATOR_STATE_UPDATE_FREQUENCY, SIMULATOR_NUM_OF_SATELLITES),
-                djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
-            );
+                    controller.enableVirtualStickControlMode(djiError -> Utils.showDialogBasedOnError(getContext(), djiError));
+                    controller.getSimulator().startSimulator(
+                        new DJISimulatorInitializationData(SIMULATOR_LATITUDE, SIMULATOR_LONGITUDE, Integer.parseInt(input.toString()), SIMULATOR_NUM_OF_SATELLITES),
+                        djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
+                    );
+                }).show();
         });
 
         mButtonConfigFinalizer.setOnClickListener(unused -> {
