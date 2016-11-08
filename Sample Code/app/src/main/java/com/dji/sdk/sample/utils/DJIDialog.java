@@ -11,7 +11,7 @@ import com.dji.sdk.sample.R;
  */
 public class DJIDialog {
     public static void showDialog(Context ctx, String str) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(ctx, R.style.set_dialog);
+        AlertDialog.Builder builder = new AlertDialog.Builder(ctx);
         builder.setMessage(str);
         builder.setNeutralButton(android.R.string.ok, new DialogInterface.OnClickListener() {
             @Override
@@ -23,7 +23,7 @@ public class DJIDialog {
     }
 
     public static void showDialog(Context ctx, int strId) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(ctx, R.style.set_dialog);
+        AlertDialog.Builder builder = new AlertDialog.Builder(ctx);
         builder.setMessage(strId);
         builder.setNeutralButton(android.R.string.ok, new DialogInterface.OnClickListener() {
             @Override
@@ -36,7 +36,7 @@ public class DJIDialog {
 
     public static void showConfirmationDialog(Context ctx, int strId,
                                               DialogInterface.OnClickListener onClickListener) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(ctx, R.style.set_dialog);
+        AlertDialog.Builder builder = new AlertDialog.Builder(ctx);
         builder.setMessage(strId);
         builder.setPositiveButton(android.R.string.ok, onClickListener);
         builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
