@@ -18,8 +18,8 @@ public class Api {
     }
 
     /* Instance Creation */
-    private Api(EpisodeDatabase EpisodeDatabaseApi) {
-        this.EpisodeDatabaseApi = EpisodeDatabaseApi;
+    private Api(DJIControllerApi djiControllerApi) {
+        this.DJIController = djiControllerApi;
     }
 
     /* Only triggered at first */
@@ -33,13 +33,13 @@ public class Api {
             .addConverterFactory(GsonConverterFactory.create(gson))
 //            .addCallAdapterFactory(RxJavaCallAdapterFactory.create()) //Rxandroid를 사용하기 위해 추가(옵션)
             .build()
-            .create(EpisodeDatabase.class)
+            .create(DJIControllerApi.class)
         );
     }
 
     /* Register Papyruth Api*/
-    private final EpisodeDatabase EpisodeDatabaseApi;
-    public static EpisodeDatabase database() {
-        return Api.instance.EpisodeDatabaseApi;
+    private final DJIControllerApi DJIController;
+    public static DJIControllerApi controller() {
+        return Api.instance.DJIController;
     }
 }

@@ -149,7 +149,7 @@ public class EpisodePlayerView extends RelativeLayout {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(episodeId -> {
                     mSimulatorLog.stopRecording();
-                    Call<Void> call = Api.database().postSimulatorLog(episodeId, mSimulatorLog);
+                    Call<Void> call = Api.controller().pushSimulatorLog(episodeId, mSimulatorLog);
                     call.enqueue(new Callback<Void>() {
                         @Override
                         public void onResponse(Call<Void> call, Response<Void> response) {
@@ -166,7 +166,7 @@ public class EpisodePlayerView extends RelativeLayout {
         });
 
         /* Fetch Episode Data */
-        Call<ArrayList<Episode>> call = Api.database().getEpisodes();
+        Call<ArrayList<Episode>> call = Api.controller().readEpisodes();
         call.enqueue(new Callback<ArrayList<Episode>>() {
             @Override
             public void onResponse(Call<ArrayList<Episode>> call, Response<ArrayList<Episode>> response) {

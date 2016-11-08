@@ -140,7 +140,7 @@ public class ButtonControllerView extends RelativeLayout {
         mToggleEpisode.setOnCheckedChangeListener((buttonView, checked) -> {
             if (this.isFlightControllerNotAvailiable()) return;
             if (checked) {
-                Call<ArrayList<Episode>> call = Api.database().getEpisodes();
+                Call<ArrayList<Episode>> call = Api.controller().readEpisodes();
                 call.enqueue(new Callback<ArrayList<Episode>>() {
                     @Override
                     public void onResponse(Call<ArrayList<Episode>> call, Response<ArrayList<Episode>> response) {
