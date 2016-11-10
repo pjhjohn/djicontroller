@@ -33,4 +33,7 @@
     <string name="btn_text_finalize_flight_config">Finalize Config</string>
     <string name="header_text_episodes">Episode List</string>
 
+    <!-- Trajectory Optimization -->
+    <string name="header_text_trajectory_optimization">Trajectory Optimization Dashboard</string>
+
 </resources>

@@ -18,8 +18,56 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/episode_list_header"
-        android:layout_above="@+id/actions_header"
+        android:layout_above="@+id/trajectory_optimization_header"
         android:layout_centerHorizontal="true"/>
+
+    <!-- Trajectory Optimization Dashboard -->
+    <TextView
+        android:id="@+id/trajectory_optimization_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/trajectory_optimization"
+        android:textStyle="bold"
+        android:text="@string/header_text_trajectory_optimization"/>
+
+    <RelativeLayout
+        android:id="@+id/trajectory_optimization"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/actions_header">
+        <TextView
+            android:id="@+id/trajectory_optimization_current_iteration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignTop="@+id/trajectory_optimization_stop"
+            android:layout_alignBottom="@+id/trajectory_optimization_stop"
+            android:gravity="center_vertical"
+            android:textStyle="bold"
+            android:text="Iteration #-"/>
+
+        <TextView
+            android:id="@+id/trajectory_optimization_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toStartOf="@+id/trajectory_optimization_stop"
+            android:layout_toEndOf="@+id/trajectory_optimization_current_iteration"
+            android:layout_alignTop="@+id/trajectory_optimization_stop"
+            android:layout_alignBottom="@+id/trajectory_optimization_stop"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:gravity="center_vertical"
+            android:text="Trajectory Optimization Status"/>
+
+        <Button
+            android:id="@+id/trajectory_optimization_stop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:text="STOP"
+            android:enabled="false"/>
+    </RelativeLayout>
 
     <!--Actions-->
     <TextView
