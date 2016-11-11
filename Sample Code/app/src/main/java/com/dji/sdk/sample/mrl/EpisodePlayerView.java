@@ -15,11 +15,10 @@ import android.widget.Toast;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.common.DJISampleApplication;
-import com.dji.sdk.sample.common.Utils;
 import com.dji.sdk.sample.mrl.network.api.Api;
 import com.dji.sdk.sample.mrl.network.model.Episode;
-import com.dji.sdk.sample.mrl.network.model.TrajectoryOptimizationFeedback;
 import com.dji.sdk.sample.mrl.network.model.SimulatorLog;
+import com.dji.sdk.sample.mrl.network.model.TrajectoryOptimizationFeedback;
 import com.dji.sdk.sample.utils.DJIModuleVerificationUtil;
 
 import java.util.ArrayList;
@@ -28,12 +27,14 @@ import java.util.concurrent.TimeUnit;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import dji.common.error.DJIError;
 import dji.common.flightcontroller.DJISimulatorInitializationData;
 import dji.common.flightcontroller.DJIVirtualStickFlightCoordinateSystem;
 import dji.common.flightcontroller.DJIVirtualStickRollPitchControlMode;
 import dji.common.flightcontroller.DJIVirtualStickVerticalControlMode;
 import dji.common.flightcontroller.DJIVirtualStickYawControlMode;
 import dji.sdk.flightcontroller.DJIFlightController;
+import dji.sdk.flightcontroller.DJISimulator;
 import dji.thirdparty.retrofit2.Call;
 import dji.thirdparty.retrofit2.Callback;
 import dji.thirdparty.retrofit2.Response;
@@ -45,10 +46,10 @@ import timber.log.Timber;
 
 public class EpisodePlayerView extends RelativeLayout {
 
-    private final double SIMULATOR_LATITUDE = 20;
-    private final double SIMULATOR_LONGITUDE = 20;
-    private final int SIMULATOR_STATE_UPDATE_FREQUENCY = 50; // in HZ with range [2, 150]
-    private final int SIMULATOR_NUM_OF_SATELLITES = 10;
+    private final double SIM_LATITUDE = 20;
+    private final double SIM_LONGITUDE = 20;
+    private final int SIM_STATE_UPDATE_FREQUENCY = 50; // in HZ with range [2, 150]
+    private final int SIM_SATELLITES = 10;
 
     @BindView(R.id.episode_list) protected ListView mEpisodeList;
     @BindView(R.id.btn_initialize_flight_config) protected Button mButtonConfigInitializer;
@@ -126,7 +127,54 @@ public class EpisodePlayerView extends RelativeLayout {
         controller.setVerticalControlMode(mPrevVerticalControlMode);
     }
 
-    private void checkAndIterateTrajectoryOptimization(Context context, TrajectoryOptimizationFeedback optimization) {
+    private void pushSimulatorLog(Episode episode) {
+        // Pass command sequence to execute
+        episode.getVirtualStickCommandsObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
+
+        // Last command's t + alpha time
+        mSimulatorLog.startRecording();
+        Observable.just(episode.id)
+            .delay((long) (episode.commands.get(episode.commands.size() - 1).t + 1000), TimeUnit.MILLISECONDS)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(episodeId -> {
+                mSimulatorLog.stopRecording();
+                Call<Void> call = Api.controller().pushSimulatorLog(episodeId, mSimulatorLog);
+                call.enqueue(new Callback<Void>() {
+                    @Override
+                    public void onResponse(Call<Void> call, Response<Void> response) {
+                        trace(String.format("Successfully posted %d simulator events", mSimulatorLog.events.size()));
+                    }
+
+                    @Override
+                    public void onFailure(Call<Void> call, Throwable throwable) {
+                        trace(throwable, "Failed to post simulator log");
+                    }
+                });
+            });
+    }
+    private void initTrajectoryOptimization(Episode episode) {
+        // Initialize Trajectory Optimization on Server
+        mButtonTrajectoryOptimizationStop.setEnabled(true);
+        mTrajectoryOptimizationCurrentIteration.setText("Iteration #-");
+        mTrajectoryOptimizationStatus.setText("Initializing...");
+        Call<TrajectoryOptimizationFeedback> call = Api.controller().initializeTrajectoryOptimization(episode.id);
+        call.enqueue(new Callback<TrajectoryOptimizationFeedback>() {
+            @Override
+            public void onResponse(Call<TrajectoryOptimizationFeedback> call, Response<TrajectoryOptimizationFeedback> response) {
+                // Initialize Trajectory Optimization UI to First Iteration
+                mButtonTrajectoryOptimizationStop.setEnabled(true);
+                isTrajectoryOptimizationRunning = true;
+                continueIterateTrajectoryOptimization(response.body());
+            }
+
+            @Override
+            public void onFailure(Call<TrajectoryOptimizationFeedback> call, Throwable throwable) {
+                trace(throwable, "Failed to initialize Trajectory Optimization");
+            }
+        });
+    }
+    private void continueIterateTrajectoryOptimization(TrajectoryOptimizationFeedback optimization) {
         // Check Client-side Termination
         if(!isTrajectoryOptimizationRunning) {
             mTrajectoryOptimizationStatus.setText("Terminated Trajectory Optimization from client-side");
@@ -167,36 +215,33 @@ public class EpisodePlayerView extends RelativeLayout {
                     call.enqueue(new Callback<TrajectoryOptimizationFeedback>() {
                         @Override
                         public void onResponse(Call<TrajectoryOptimizationFeedback> call, Response<TrajectoryOptimizationFeedback> response) {
-                            checkAndIterateTrajectoryOptimization(context, response.body());
+                            continueIterateTrajectoryOptimization(response.body());
                         }
 
                         @Override
                         public void onFailure(Call<TrajectoryOptimizationFeedback> call, Throwable throwable) {
-                            throwable.printStackTrace();
-                            Toast.makeText(context, "Unhandled Server Error : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                            trace(throwable, "Unhandled Server Error");
                         }
                     });
                 });
-        } else {
-            Timber.d(optimization.error_message);
-            Toast.makeText(context, "Server Error : " + optimization.error_message, Toast.LENGTH_SHORT).show();
-        }
+        } else trace("Server Error : " + optimization.error_message);
     }
 
     private void initUI(Context context, AttributeSet attrs) {
-        /* Inflate & Initialize View */
+        /* View Inflation & ButterKnife Binding */
         View content = LayoutInflater.from(context).inflate(R.layout.view_episode_player, null, false);
         addView(content, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         mUnbinder = ButterKnife.bind(this, content);
 
         /* Initialize Simulator Callback */
         mSimulatorLog = new SimulatorLog();
-        DJISampleApplication.getAircraftInstance().getFlightController().getSimulator().setUpdatedSimulatorStateDataCallback(
-            djiSimulatorStateData -> mSimulatorLog.add(djiSimulatorStateData)
-        );
-
-        /* Initialize Trajectory Optimization Dashboard */
-        mButtonTrajectoryOptimizationStop.setOnClickListener(unused -> isTrajectoryOptimizationRunning = false);
+        DJISimulator simulator = DJISampleApplication.getAircraftInstance().getFlightController().getSimulator();
+        if (null == simulator) trace("Simulator is NULL");
+        else {
+            simulator.setUpdatedSimulatorStateDataCallback(djiSimulatorStateData -> mSimulatorLog.add(djiSimulatorStateData));
+            mButtonConfigInitializer.setEnabled(!simulator.hasSimulatorStarted());
+            mButtonConfigFinalizer.setEnabled(simulator.hasSimulatorStarted());
+        }
 
         /* Initialize Episode List */
         mEpisodes = new ArrayList<>();
@@ -205,73 +250,12 @@ public class EpisodePlayerView extends RelativeLayout {
         mEpisodeList.setOnItemClickListener((parent, view, position, id) -> new MaterialDialog.Builder(parent.getContext())
             .title(String.format("Episode #%d", mEpisodes.get(position).id))
             .content("Choose options below")
-            .autoDismiss(false)
-            .positiveText("Trajectory Optimization")
-            .onPositive((dialog, which) -> {
-                // Start Trajectory Optimization
-                Episode episode = mEpisodes.get(position);
-
-                // Initialize Trajectory Optimization on Server
-                mButtonTrajectoryOptimizationStop.setEnabled(true);
-                mTrajectoryOptimizationCurrentIteration.setText("Iteration #-");
-                mTrajectoryOptimizationStatus.setText("Initializing...");
-                Call<TrajectoryOptimizationFeedback> call = Api.controller().initializeTrajectoryOptimization(episode.id);
-                call.enqueue(new Callback<TrajectoryOptimizationFeedback>() {
-                    @Override
-                    public void onResponse(Call<TrajectoryOptimizationFeedback> call, Response<TrajectoryOptimizationFeedback> response) {
-                        // Initialize Trajectory Optimization UI to First Iteration
-                        mButtonTrajectoryOptimizationStop.setEnabled(true);
-                        isTrajectoryOptimizationRunning = true;
-
-                        checkAndIterateTrajectoryOptimization(context, response.body());
-                    }
-
-                    @Override
-                    public void onFailure(Call<TrajectoryOptimizationFeedback> call, Throwable throwable) {
-                        throwable.printStackTrace();
-                        Toast.makeText(context, "Failed to initialize Trajectory Optimization : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
-                dialog.dismiss();
-            })
-            .neutralText("Execute Once")
-            .onNeutral((dialog, which) -> {
-                // Execute just this episode
-                Episode episode = mEpisodes.get(position);
-
-                // Pass command sequence to execute
-                episode.getVirtualStickCommandsObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
-
-                // Last command's t + alpha time
-                mSimulatorLog.startRecording();
-                Observable.just(episode.id)
-                    .delay((long) (episode.commands.get(episode.commands.size() - 1).t + 1000), TimeUnit.MILLISECONDS)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(episodeId -> {
-                        mSimulatorLog.stopRecording();
-                        Call<Void> call = Api.controller().pushSimulatorLog(episodeId, mSimulatorLog);
-                        call.enqueue(new Callback<Void>() {
-                            @Override
-                            public void onResponse(Call<Void> call, Response<Void> response) {
-                                Toast.makeText(context, String.format("Successfully posted %d simulator events", mSimulatorLog.events.size()), Toast.LENGTH_SHORT).show();
-                            }
-
-                            @Override
-                            public void onFailure(Call<Void> call, Throwable throwable) {
-                                throwable.printStackTrace();
-                                Toast.makeText(context, "Failed to post simulator log : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    });
-                dialog.dismiss();
-            })
-            .negativeText("Dismiss")
-            .onNegative((dialog, which) -> dialog.dismiss())
+            .positiveText("New Optimization")
+            .onPositive((dialog, which) -> initTrajectoryOptimization(mEpisodes.get(position)))
+            .neutralText("Just Once")
+            .onNeutral((dialog, which) -> pushSimulatorLog(mEpisodes.get(position)))
             .show()
         );
-
-        /* Fetch Episode Data */
         Call<ArrayList<Episode>> call = Api.controller().readEpisodes();
         call.enqueue(new Callback<ArrayList<Episode>>() {
             @Override
@@ -282,57 +266,52 @@ public class EpisodePlayerView extends RelativeLayout {
                 mEpisodeAdapter.clear();
                 mEpisodeAdapter.addAll(episodes);
                 mEpisodeAdapter.notifyDataSetChanged();
-                Toast.makeText(context, String.format("Successfully loaded %d episodes", episodes.size()), Toast.LENGTH_SHORT).show();
+                trace(String.format("Successfully loaded %d episodes", episodes.size()));
             }
 
             @Override
             public void onFailure(Call<ArrayList<Episode>> call, Throwable throwable) {
-                throwable.printStackTrace();
-                Toast.makeText(context, "Failed to load episodes : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                trace(throwable, "Failed to load episodes");
             }
         });
+
+        /* Initialize Trajectory Optimization Dashboard */
+        mButtonTrajectoryOptimizationStop.setOnClickListener(unused -> isTrajectoryOptimizationRunning = false);
+
+        /* Set Listeners for 'Availiable Actions' */
 
         mButtonConfigInitializer.setOnClickListener(unused -> new MaterialDialog.Builder(context)
             .title("SimulatorStateUpdateFrequency")
             .content("Update Frequency in Hz with range [2, 150]")
             .inputType(InputType.TYPE_NUMBER_FLAG_DECIMAL)
-            .input("Hz with range [2, 150]", String.format("%d", SIMULATOR_STATE_UPDATE_FREQUENCY), (dialog, input) -> {
-                // Check FlightController Accessibility
+            .input("Hz with range [2, 150]", String.format("%d", SIM_STATE_UPDATE_FREQUENCY), (dialog, input) -> {
                 if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
                 DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
-
-                controller.enableVirtualStickControlMode(djiError -> Utils.showDialogBasedOnError(getContext(), djiError));
-                controller.getSimulator().startSimulator(
-                    new DJISimulatorInitializationData(SIMULATOR_LATITUDE, SIMULATOR_LONGITUDE, Integer.parseInt(input.toString()), SIMULATOR_NUM_OF_SATELLITES),
-                    djiError -> Utils.showDialogBasedOnError(getContext(), djiError)
-                );
+                controller.enableVirtualStickControlMode(this::toast);
+                controller.getSimulator().startSimulator(new DJISimulatorInitializationData(SIM_LATITUDE, SIM_LONGITUDE, Integer.parseInt(input.toString()), SIM_SATELLITES), this::toast);
+                mButtonConfigInitializer.setEnabled(false);
+                mButtonConfigFinalizer.setEnabled(true);
             })
             .show()
         );
 
         mButtonConfigFinalizer.setOnClickListener(unused -> {
-            // Check FlightController Accessibility
             if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
             DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
-
-            controller.disableVirtualStickControlMode(djiError -> Utils.showDialogBasedOnError(getContext(), djiError));
-            controller.getSimulator().stopSimulator(djiError -> Utils.showDialogBasedOnError(getContext(), djiError));
+            controller.disableVirtualStickControlMode(this::toast);
+            controller.getSimulator().stopSimulator(this::toast);
+            mButtonConfigInitializer.setEnabled(true);
+            mButtonConfigFinalizer.setEnabled(false);
         });
 
         mButtonTakeOff.setOnClickListener(unused -> {
-            // Check FlightController Accessibility
             if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
-            DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
-
-            controller.takeOff(djiError -> {}); // Ignore status feedback
+            DJISampleApplication.getAircraftInstance().getFlightController().takeOff(this::toast);
         });
 
         mButtonAutoLanding.setOnClickListener(unused -> {
-            // Check FlightController Accessibility
             if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
-            DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
-
-            controller.autoLanding(djiError -> {}); // Ignore status feedback
+            DJISampleApplication.getAircraftInstance().getFlightController().autoLanding(this::toast);
         });
     }
 
@@ -341,6 +320,22 @@ public class EpisodePlayerView extends RelativeLayout {
         if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
         DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
 
-        controller.sendVirtualStickFlightControlData(cmd.toDJIVirtualStickFlightControlData(), djiError -> {}); // Ignore status feedback
+        controller.sendVirtualStickFlightControlData(cmd.toDJIVirtualStickFlightControlData(), this::silence); // Ignore status feedback
     };
+
+    /* MISC : Toast, Trace, Log */
+    private void silence(DJIError djiError) {}
+    private void toast(DJIError djiError) {
+        Observable.just(null == djiError ? this.getContext().getResources().getString(R.string.success) : djiError.getDescription())
+            .subscribeOn(AndroidSchedulers.mainThread())
+            .subscribe(this::trace);
+    }
+    private void trace(String message) {
+        Timber.d(message);
+        Toast.makeText(this.getContext(), message, Toast.LENGTH_SHORT).show();
+    }
+    private void trace(Throwable throwable, String prefix) {
+        throwable.printStackTrace();
+        Toast.makeText(this.getContext(), String.format("%s : %s", prefix, throwable.getMessage()), Toast.LENGTH_SHORT).show();
+    }
 }
