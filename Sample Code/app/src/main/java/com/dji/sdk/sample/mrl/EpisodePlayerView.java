@@ -177,7 +177,7 @@ public class EpisodePlayerView extends RelativeLayout {
     private void continueIterateTrajectoryOptimization(TrajectoryOptimizationFeedback optimization) {
         // Check Client-side Termination
         if(!isTrajectoryOptimizationRunning) {
-            mTrajectoryOptimizationStatus.setText("Terminated Trajectory Optimization from client-side");
+            mTrajectoryOptimizationStatus.setText("Terminated from client-side");
             mButtonTrajectoryOptimizationStop.setEnabled(false);
             return;
         }
@@ -186,7 +186,7 @@ public class EpisodePlayerView extends RelativeLayout {
         if(optimization.success) {
             // Check Server-side Termination
             if(optimization.commands.isEmpty()) {
-                mTrajectoryOptimizationStatus.setText("Terminated Trajectory Optimization from server-side");
+                mTrajectoryOptimizationStatus.setText("Terminated from server-side");
                 mButtonTrajectoryOptimizationStop.setEnabled(false);
                 return;
             }
@@ -209,7 +209,7 @@ public class EpisodePlayerView extends RelativeLayout {
                     mSimulatorLog.stopRecording();
 
                     // Update Trajectory Optimization UI
-                    mTrajectoryOptimizationStatus.setText(String.format("Sending %d SimulatorEvents to server...", mSimulatorLog.events.size()));
+                    mTrajectoryOptimizationStatus.setText(String.format("Sending %d SimulatorEvents...", mSimulatorLog.events.size()));
 
                     Call<TrajectoryOptimizationFeedback> call = Api.controller().continueTrajectoryOptimization(episodeId, mSimulatorLog);
                     call.enqueue(new Callback<TrajectoryOptimizationFeedback>() {
