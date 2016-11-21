@@ -155,6 +155,11 @@ public class EpisodePlayerView extends RelativeLayout {
             });
     }
     private void initTrajectoryOptimization(Episode episode) {
+        // Initialize VirtualStick Mode
+        if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) { this.trace("FlightController NotAvailable"); return; }
+        DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
+        if(!controller.getVirtualStickAdvancedModeEnabled()) controller.enableVirtualStickControlMode(this::toast);
+
         // Initialize Trajectory Optimization on Server
         mButtonTrajectoryOptimizationStop.setEnabled(true);
         mTrajectoryOptimizationCurrentIteration.setText("Iteration #-");
@@ -197,34 +202,42 @@ public class EpisodePlayerView extends RelativeLayout {
             mTrajectoryOptimizationStatus.setText(String.format("Executing %d Commands...", optimization.commands.size()));
 
             // Send VirtualStick Commands to Drone
-            optimization.getVirtualStickCommandsObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
+            if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) { this.trace("FlightController NotAvailable"); return; }
+            DJISimulator simulator = DJISampleApplication.getAircraftInstance().getFlightController().getSimulator();
+            if (simulator.hasSimulatorStarted()) simulator.stopSimulator(this::toast);
+            simulator.startSimulator(new DJISimulatorInitializationData(SIM_LATITUDE, SIM_LONGITUDE, SIM_STATE_UPDATE_FREQUENCY, SIM_SATELLITES), completeStartSimulator -> {
+                DJISampleApplication.getAircraftInstance().getFlightController().takeOff(completeTakeOff -> {
+                    optimization.getVirtualStickCommandsObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
 
-            // Record & Send back to server
-            mSimulatorLog.startRecording(optimization.timestep);
-            Observable.just(optimization.id)
-                .delay((long) (optimization.commands.get(optimization.commands.size() - 1).t + 1000), TimeUnit.MILLISECONDS)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(episodeId -> {
-                    // Stop Recording
-                    mSimulatorLog.stopRecording();
+                    // Record & Send back to server
+                    Observable.just(null).delay(optimization.timestep, TimeUnit.MILLISECONDS).subscribe(unused -> mSimulatorLog.startRecording(optimization.timestep)); // Sync to sendVirtualStickCommand stream
+                    Observable.just(optimization.id)
+                        .delay((long) (optimization.commands.get(optimization.commands.size() - 1).t + 0), TimeUnit.MILLISECONDS)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(episodeId -> {
+                            // Stop Recording
+                            mSimulatorLog.stopRecording();
 
-                    // Update Trajectory Optimization UI
-                    mTrajectoryOptimizationStatus.setText(String.format("Sending %d SimulatorEvents...", mSimulatorLog.events.size()));
+                            // Update Trajectory Optimization UI
+                            mTrajectoryOptimizationStatus.setText(String.format("Sending %d SimulatorEvents...", mSimulatorLog.events.size()));
 
-                    Call<TrajectoryOptimizationFeedback> call = Api.controller().continueTrajectoryOptimization(episodeId, mSimulatorLog);
-                    call.enqueue(new Callback<TrajectoryOptimizationFeedback>() {
-                        @Override
-                        public void onResponse(Call<TrajectoryOptimizationFeedback> call, Response<TrajectoryOptimizationFeedback> response) {
-                            continueIterateTrajectoryOptimization(response.body());
-                        }
+                            Call<TrajectoryOptimizationFeedback> call = Api.controller().continueTrajectoryOptimization(episodeId, mSimulatorLog);
+                            call.enqueue(new Callback<TrajectoryOptimizationFeedback>() {
+                                @Override
+                                public void onResponse(Call<TrajectoryOptimizationFeedback> call, Response<TrajectoryOptimizationFeedback> response) {
+                                    continueIterateTrajectoryOptimization(response.body());
+                                }
 
-                        @Override
-                        public void onFailure(Call<TrajectoryOptimizationFeedback> call, Throwable throwable) {
-                            trace(throwable, "Unhandled Server Error");
-                        }
-                    });
+                                @Override
+                                public void onFailure(Call<TrajectoryOptimizationFeedback> call, Throwable throwable) {
+                                    trace(throwable, "Unhandled Server Error");
+                                }
+                            });
+                        });
+
                 });
+            });
         } else trace("Server Error : " + optimization.error_message);
     }
 
@@ -287,7 +300,6 @@ public class EpisodePlayerView extends RelativeLayout {
         mButtonTrajectoryOptimizationStop.setOnClickListener(unused -> isTrajectoryOptimizationRunning = false);
 
         /* Set Listeners for 'Availiable Actions' */
-
         mButtonConfigInitializer.setOnClickListener(unused -> {
             if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
             DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
