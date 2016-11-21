@@ -48,7 +48,7 @@ public class EpisodePlayerView extends RelativeLayout {
 
     private final double SIM_LATITUDE = 20;
     private final double SIM_LONGITUDE = 20;
-    private final int SIM_STATE_UPDATE_FREQUENCY = 50; // in HZ with range [2, 150]
+    private final int SIM_STATE_UPDATE_FREQUENCY = 25; // in HZ with range [2, 150]
     private final int SIM_SATELLITES = 10;
 
     @BindView(R.id.episode_list) protected ListView mEpisodeList;
@@ -288,20 +288,14 @@ public class EpisodePlayerView extends RelativeLayout {
 
         /* Set Listeners for 'Availiable Actions' */
 
-        mButtonConfigInitializer.setOnClickListener(unused -> new MaterialDialog.Builder(context)
-            .title("SimulatorStateUpdateFrequency")
-            .content("Update Frequency in Hz with range [2, 150]")
-            .inputType(InputType.TYPE_NUMBER_FLAG_DECIMAL)
-            .input("Hz with range [2, 150]", String.format("%d", SIM_STATE_UPDATE_FREQUENCY), (dialog, input) -> {
-                if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
-                DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
-                controller.enableVirtualStickControlMode(this::toast);
-                controller.getSimulator().startSimulator(new DJISimulatorInitializationData(SIM_LATITUDE, SIM_LONGITUDE, Integer.parseInt(input.toString()), SIM_SATELLITES), this::toast);
-                mButtonConfigInitializer.setEnabled(false);
-                mButtonConfigFinalizer.setEnabled(true);
-            })
-            .show()
-        );
+        mButtonConfigInitializer.setOnClickListener(unused -> {
+            if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
+            DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
+            controller.enableVirtualStickControlMode(this::toast);
+            controller.getSimulator().startSimulator(new DJISimulatorInitializationData(SIM_LATITUDE, SIM_LONGITUDE, SIM_STATE_UPDATE_FREQUENCY, SIM_SATELLITES), this::toast);
+            mButtonConfigInitializer.setEnabled(false);
+            mButtonConfigFinalizer.setEnabled(true);
+        });
 
         mButtonConfigFinalizer.setOnClickListener(unused -> {
             if (!DJIModuleVerificationUtil.isFlightControllerAvailable()) return;
