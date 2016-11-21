@@ -57,6 +57,7 @@ public class EpisodePlayerView extends RelativeLayout {
     @BindView(R.id.btn_take_off) protected Button mButtonTakeOff;
     @BindView(R.id.btn_auto_landing) protected Button mButtonAutoLanding;
 
+    @BindView(R.id.simulator_feedback) protected TextView mSimulatorFeedback;
     @BindView(R.id.trajectory_optimization_current_iteration) protected TextView mTrajectoryOptimizationCurrentIteration;
     @BindView(R.id.trajectory_optimization_status) protected TextView mTrajectoryOptimizationStatus;
     @BindView(R.id.trajectory_optimization_stop) protected TextView mButtonTrajectoryOptimizationStop;
@@ -132,7 +133,7 @@ public class EpisodePlayerView extends RelativeLayout {
         episode.getVirtualStickCommandsObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
 
         // Last command's t + alpha time
-        mSimulatorLog.startRecording();
+        mSimulatorLog.startRecording(episode.timestep);
         Observable.just(episode.id)
             .delay((long) (episode.commands.get(episode.commands.size() - 1).t + 1000), TimeUnit.MILLISECONDS)
             .subscribeOn(Schedulers.io())
@@ -199,7 +200,7 @@ public class EpisodePlayerView extends RelativeLayout {
             optimization.getVirtualStickCommandsObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
 
             // Record & Send back to server
-            mSimulatorLog.startRecording();
+            mSimulatorLog.startRecording(optimization.timestep);
             Observable.just(optimization.id)
                 .delay((long) (optimization.commands.get(optimization.commands.size() - 1).t + 1000), TimeUnit.MILLISECONDS)
                 .subscribeOn(Schedulers.io())
@@ -238,7 +239,14 @@ public class EpisodePlayerView extends RelativeLayout {
         DJISimulator simulator = DJISampleApplication.getAircraftInstance().getFlightController().getSimulator();
         if (null == simulator) trace("Simulator is NULL");
         else {
-            simulator.setUpdatedSimulatorStateDataCallback(djiSimulatorStateData -> mSimulatorLog.add(djiSimulatorStateData));
+            simulator.setUpdatedSimulatorStateDataCallback(djiSimulatorStateData -> {
+                mSimulatorLog.add(djiSimulatorStateData);
+                Observable.just(null).observeOn(AndroidSchedulers.mainThread()).subscribe(unused ->
+                mSimulatorFeedback.setText(String.format("Position : [%.4f, %.4f, %.4f]\nOrientation : [%.4f, %.4f, %.4f]\n",
+                    djiSimulatorStateData.getPositionX(), djiSimulatorStateData.getPositionY(), djiSimulatorStateData.getPositionZ(),
+                    djiSimulatorStateData.getYaw(), djiSimulatorStateData.getPitch(), djiSimulatorStateData.getRoll())
+                ));
+            });
             mButtonConfigInitializer.setEnabled(!simulator.hasSimulatorStarted());
             mButtonConfigFinalizer.setEnabled(simulator.hasSimulatorStarted());
         }

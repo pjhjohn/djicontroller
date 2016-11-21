@@ -26,9 +26,15 @@
         android:id="@+id/trajectory_optimization_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/trajectory_optimization"
+        android:layout_above="@+id/simulator_feedback"
         android:textStyle="bold"
         android:text="@string/header_text_trajectory_optimization"/>
+
+    <TextView
+        android:id="@+id/simulator_feedback"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/trajectory_optimization"/>
 
     <RelativeLayout
         android:id="@+id/trajectory_optimization"

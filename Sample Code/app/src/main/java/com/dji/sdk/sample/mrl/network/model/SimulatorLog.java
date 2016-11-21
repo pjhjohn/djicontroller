@@ -7,24 +7,26 @@ import dji.common.flightcontroller.DJISimulatorStateData;
 public class SimulatorLog {
     public ArrayList<SimulatorEvent> events;
     private boolean isRecording;
-    private long startTime;
+    private int timestep;
 
     public SimulatorLog() {
         this.events = new ArrayList<>();
         this.isRecording = false;
+        this.timestep = 0;
     }
 
-    public void startRecording() {
+    public void startRecording(int timestep) {
         this.events.clear();
         this.isRecording = true;
-        this.startTime = System.currentTimeMillis();
+        this.timestep = timestep;
     }
 
     public void stopRecording() {
         this.isRecording = false;
+        this.timestep = 0;
     }
 
     public void add(DJISimulatorStateData djiSimulatorStateData) {
-        if(isRecording) this.events.add(new SimulatorEvent(djiSimulatorStateData, this.startTime));
+        if(isRecording) this.events.add(new SimulatorEvent(djiSimulatorStateData, this.timestep * this.events.size()));
     }
 }

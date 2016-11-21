@@ -15,7 +15,7 @@ public class SimulatorEvent {
     public Boolean areMotorsOn;
     public Long time;
 
-    public SimulatorEvent(DJISimulatorStateData simulatorStateData, long startTime) {
+    public SimulatorEvent(DJISimulatorStateData simulatorStateData, long elapsedTime) {
         this.latitude = simulatorStateData.getLatitude();
         this.longitude = simulatorStateData.getLongitude();
         this.yaw = simulatorStateData.getYaw();
@@ -26,6 +26,6 @@ public class SimulatorEvent {
         this.positionZ = simulatorStateData.getPositionZ();
         this.isFlying = simulatorStateData.isFlying();
         this.areMotorsOn = simulatorStateData.areMotorsOn();
-        this.time = System.currentTimeMillis() - startTime;
+        this.time = elapsedTime;
     }
 }
