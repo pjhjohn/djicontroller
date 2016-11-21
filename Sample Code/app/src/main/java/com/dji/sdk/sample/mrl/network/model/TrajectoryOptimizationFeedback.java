@@ -21,7 +21,11 @@ public class TrajectoryOptimizationFeedback {
     public String error_message;                // Error message if anything goes wrong (message from server)
 
     public Observable<VirtualStickCommand> getVirtualStickCommandsObservable() {
-        return Observable.from(this.commands)
+        ArrayList<Command> commandsToSend = new ArrayList<>(commands);
+        Command terminationCommand = new Command();
+        terminationCommand.t = timestep + commandsToSend.get(commandsToSend.size() - 1).t;
+        commandsToSend.add(terminationCommand);
+        return Observable.from(commandsToSend)
             .concatMap(command -> Observable.just(command).delay(this.timestep, TimeUnit.MILLISECONDS))
             .map(command -> new VirtualStickCommand(command.pitch, command.roll, command.yaw, command.throttle))
             .subscribeOn(Schedulers.io())
