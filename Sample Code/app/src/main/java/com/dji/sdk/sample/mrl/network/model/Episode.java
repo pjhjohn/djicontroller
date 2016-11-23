@@ -31,7 +31,7 @@ public class Episode {
     public Observable<VirtualStickCommand> getVirtualStickCommandsObservable() {
         return Observable.from(this.commands)
             .concatMap(command -> Observable.just(command).delay(this.timestep, TimeUnit.MILLISECONDS))
-            .map(command -> new VirtualStickCommand(command.pitch, command.roll, command.yaw, command.throttle))
+            .map(Command::toVirtualStickCommand)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread());
     }
