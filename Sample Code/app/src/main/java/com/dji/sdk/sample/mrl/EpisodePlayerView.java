@@ -1,7 +1,6 @@
 package com.dji.sdk.sample.mrl;
 
 import android.content.Context;
-import android.text.InputType;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,7 +21,6 @@ import com.dji.sdk.sample.mrl.network.model.TrajectoryOptimizationFeedback;
 import com.dji.sdk.sample.utils.DJIModuleVerificationUtil;
 
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -65,7 +63,6 @@ public class EpisodePlayerView extends RelativeLayout {
     private Unbinder mUnbinder;
     private ArrayList<Episode> mEpisodes;
     private EpisodeAdapter mEpisodeAdapter;
-    private SimulatorLog mSimulatorLog;
     private boolean isTrajectoryOptimizationRunning;
 
     /* Initializers */
@@ -133,18 +130,15 @@ public class EpisodePlayerView extends RelativeLayout {
         episode.getVirtualStickCommandsObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
 
         // Last command's t + alpha time
-        mSimulatorLog.startRecording(episode.timestep);
-        Observable.just(episode.id)
-            .delay((long) (episode.commands.get(episode.commands.size() - 1).t + 1000), TimeUnit.MILLISECONDS)
+        SimulatorLog.getInstance().startRecording(episode.timestep, episode.commands.size())
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(episodeId -> {
-                mSimulatorLog.stopRecording();
-                Call<Void> call = Api.controller().pushSimulatorLog(episodeId, mSimulatorLog);
+            .subscribe(logSize -> {
+                Call<Void> call = Api.controller().pushSimulatorLog(episode.id, SimulatorLog.getInstance());
                 call.enqueue(new Callback<Void>() {
                     @Override
                     public void onResponse(Call<Void> call, Response<Void> response) {
-                        trace(String.format("Successfully posted %d simulator events", mSimulatorLog.events.size()));
+                        trace(String.format("Successfully posted %d simulator events", logSize));
                     }
 
                     @Override
@@ -200,19 +194,14 @@ public class EpisodePlayerView extends RelativeLayout {
             optimization.getVirtualStickCommandsObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
 
             // Record & Send back to server
-            mSimulatorLog.startRecording(optimization.timestep);
-            Observable.just(optimization.id)
-                .delay((long) (optimization.commands.get(optimization.commands.size() - 1).t + 1000), TimeUnit.MILLISECONDS)
+            SimulatorLog.getInstance().startRecording(optimization.timestep, optimization.commands.size())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(episodeId -> {
-                    // Stop Recording
-                    mSimulatorLog.stopRecording();
-
+                .subscribe(logSize -> {
                     // Update Trajectory Optimization UI
-                    mTrajectoryOptimizationStatus.setText(String.format("Sending %d SimulatorEvents...", mSimulatorLog.events.size()));
+                    mTrajectoryOptimizationStatus.setText(String.format("Sending %d SimulatorEvents...", logSize));
 
-                    Call<TrajectoryOptimizationFeedback> call = Api.controller().continueTrajectoryOptimization(episodeId, mSimulatorLog);
+                    Call<TrajectoryOptimizationFeedback> call = Api.controller().continueTrajectoryOptimization(optimization.id, SimulatorLog.getInstance());
                     call.enqueue(new Callback<TrajectoryOptimizationFeedback>() {
                         @Override
                         public void onResponse(Call<TrajectoryOptimizationFeedback> call, Response<TrajectoryOptimizationFeedback> response) {
@@ -235,12 +224,11 @@ public class EpisodePlayerView extends RelativeLayout {
         mUnbinder = ButterKnife.bind(this, content);
 
         /* Initialize Simulator Callback */
-        mSimulatorLog = new SimulatorLog();
         DJISimulator simulator = DJISampleApplication.getAircraftInstance().getFlightController().getSimulator();
         if (null == simulator) trace("Simulator is NULL");
         else {
             simulator.setUpdatedSimulatorStateDataCallback(djiSimulatorStateData -> {
-                mSimulatorLog.add(djiSimulatorStateData);
+                SimulatorLog.getInstance().add(djiSimulatorStateData);
                 Observable.just(null).observeOn(AndroidSchedulers.mainThread()).subscribe(unused ->
                 mSimulatorFeedback.setText(String.format("Position : [%.4f, %.4f, %.4f]\nOrientation : [%.4f, %.4f, %.4f]\n",
                     djiSimulatorStateData.getPositionX(), djiSimulatorStateData.getPositionY(), djiSimulatorStateData.getPositionZ(),
