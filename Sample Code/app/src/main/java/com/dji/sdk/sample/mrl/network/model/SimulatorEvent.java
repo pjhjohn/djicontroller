@@ -17,7 +17,7 @@ public class SimulatorEvent {
         this.rz = -simulatorStateData.getYaw();
         this.t = (double) elapsedTime;
         this.x = simulatorStateData.getPositionX();
-        this.y = simulatorStateData.getPositionY();
-        this.z = simulatorStateData.getPositionZ();
+        this.y = -simulatorStateData.getPositionY();
+        this.z = -simulatorStateData.getPositionZ();
     }
 }
