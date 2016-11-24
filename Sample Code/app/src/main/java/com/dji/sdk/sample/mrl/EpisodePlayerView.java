@@ -126,10 +126,10 @@ public class EpisodePlayerView extends RelativeLayout {
     }
 
     private void pushSimulatorLog(Episode episode) {
-        // Pass command sequence to execute
+        // Send Command to VirtualStick
         episode.getVirtualStickCommandsObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
 
-        // Last command's t + alpha time
+        // Record & Send back to server
         SimulatorLog.getInstance().startRecording(episode.timestep, episode.commands.size())
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -179,7 +179,7 @@ public class EpisodePlayerView extends RelativeLayout {
 
         // Check Server-side Validity
         if(optimization.success) {
-            // Check Server-side Termination
+            // Check Server-side Termination : Empty commands are considered as server-side termination
             if(optimization.commands.isEmpty()) {
                 mTrajectoryOptimizationStatus.setText("Terminated from server-side");
                 mButtonTrajectoryOptimizationStop.setEnabled(false);
@@ -190,7 +190,7 @@ public class EpisodePlayerView extends RelativeLayout {
             mTrajectoryOptimizationCurrentIteration.setText(String.format("Iteration#%d", optimization.current_iteration_index));
             mTrajectoryOptimizationStatus.setText(String.format("Executing %d Commands...", optimization.commands.size()));
 
-            // Send VirtualStick Commands to Drone
+            // Send Command to VirtualStick
             optimization.getVirtualStickCommandsObservable().subscribe(EpisodePlayerView.this.sendVirtualStickCommand);
 
             // Record & Send back to server

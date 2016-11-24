@@ -22,12 +22,12 @@ public class SimulatorLog {
     private int mRecordCount = 0;
     private final int mRecordOffset = 2; // Number of logs to ignore at the beginning
 
-    public Observable<Integer> startRecording(int timestep, int recordCount) {
+    public Observable<Integer> startRecording(int timestep, int numOfCommands) {
         isRecording = true;
         events.clear();
         mTimestep = timestep;
         mRecordIndex = 0;
-        mRecordCount = recordCount;
+        mRecordCount = numOfCommands + 1;
         return mRecordingSubject = BehaviorSubject.create();
     }
 
