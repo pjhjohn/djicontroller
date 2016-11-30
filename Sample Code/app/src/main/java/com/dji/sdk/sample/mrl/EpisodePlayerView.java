@@ -282,6 +282,8 @@ public class EpisodePlayerView extends RelativeLayout {
             DJIFlightController controller = DJISampleApplication.getAircraftInstance().getFlightController();
             controller.enableVirtualStickControlMode(this::toast);
             controller.getSimulator().startSimulator(new DJISimulatorInitializationData(SIM_LATITUDE, SIM_LONGITUDE, SIM_STATE_UPDATE_FREQUENCY, SIM_SATELLITES), this::toast);
+            controller.getFlightLimitation().setMaxFlightHeight(500, this::toast); // in range [20, 500] m
+            controller.getFlightLimitation().setMaxFlightRadius(500, this::toast); // in range [15, 500] m
             mButtonConfigInitializer.setEnabled(false);
             mButtonConfigFinalizer.setEnabled(true);
         });
