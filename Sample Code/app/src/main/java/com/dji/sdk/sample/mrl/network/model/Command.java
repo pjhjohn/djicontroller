@@ -20,6 +20,6 @@ public class Command {
 
     // Coordinate System Conversion : global x, y, z to roll, pitch, yaw
     public VirtualStickCommand toVirtualStickCommand() {
-        return new VirtualStickCommand(-this.dy, this.dx, -this.drz, -this.dz); // pitch, roll, yaw, throttle
+        return new VirtualStickCommand(-this.dy, this.dx, -this.drz, this.dz); // pitch, roll, yaw, throttle
     }
 }
