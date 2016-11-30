@@ -21,7 +21,9 @@ public class TrajectoryOptimizationFeedback {
     public String error_message;                // Error message if anything goes wrong (message from server)
 
     public Observable<VirtualStickCommand> getVirtualStickCommandsObservable() {
-        return Observable.from(this.commands)
+        ArrayList<Command> commandsToConvert = new ArrayList<>(this.commands);
+        commandsToConvert.add(new Command(this.commands.get(this.commands.size() - 1).t + this.timestep, 0.0f, 0.0f, 0.0f, 0.0f));
+        return Observable.from(commandsToConvert)
             .concatMap(command -> Observable.just(command).delay(this.timestep, TimeUnit.MILLISECONDS))
             .map(Command::toVirtualStickCommand)
             .subscribeOn(Schedulers.io())

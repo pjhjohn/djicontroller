@@ -2,6 +2,7 @@ package com.dji.sdk.sample.mrl.network.model;
 
 import com.dji.sdk.sample.mrl.VirtualStickCommand;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -17,10 +18,10 @@ public class Episode {
     public Integer id;
     public String name;
     public Integer timestep;
-    public List<ControlPoint> control_points;
-    public List<State> states;
-    public List<DiffState> diff_states;
-    public List<Command> commands;
+    public ArrayList<ControlPoint> control_points;
+    public ArrayList<State> states;
+    public ArrayList<DiffState> diff_states;
+    public ArrayList<Command> commands;
     public String created_at;
     public String updated_at;
 
@@ -29,7 +30,9 @@ public class Episode {
     }
 
     public Observable<VirtualStickCommand> getVirtualStickCommandsObservable() {
-        return Observable.from(this.commands)
+        ArrayList<Command> commandsToConvert = new ArrayList<>(this.commands);
+        commandsToConvert.add(new Command(this.commands.get(this.commands.size() - 1).t + this.timestep, 0.0f, 0.0f, 0.0f, 0.0f));
+        return Observable.from(commandsToConvert)
             .concatMap(command -> Observable.just(command).delay(this.timestep, TimeUnit.MILLISECONDS))
             .map(Command::toVirtualStickCommand)
             .subscribeOn(Schedulers.io())
