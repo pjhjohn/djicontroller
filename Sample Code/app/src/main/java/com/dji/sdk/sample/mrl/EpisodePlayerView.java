@@ -21,6 +21,7 @@ import com.dji.sdk.sample.mrl.network.model.TrajectoryOptimizationFeedback;
 import com.dji.sdk.sample.utils.DJIModuleVerificationUtil;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -205,7 +206,7 @@ public class EpisodePlayerView extends RelativeLayout {
                     call.enqueue(new Callback<TrajectoryOptimizationFeedback>() {
                         @Override
                         public void onResponse(Call<TrajectoryOptimizationFeedback> call, Response<TrajectoryOptimizationFeedback> response) {
-                            continueIterateTrajectoryOptimization(response.body());
+                            Observable.just(null).delay(5, TimeUnit.SECONDS).observeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(unused -> continueIterateTrajectoryOptimization(response.body()));
                         }
 
                         @Override
